@@ -84,6 +84,11 @@ RARITY_SHORT = {"secret rare": "ScR", "ultra rare": "UR", "ultimate rare": "UtR"
 NAMES_FILE = DATA_DIR / "card_names.json"
 YGOPRODECK_URL = "https://db.ygoprodeck.com/api/v7/cardinfo.php"
 
+# Cardmarket + TCGplayer reference prices are saved once a day (see references.py).
+# Cardmarket versions that can't be matched automatically are set by hand in this file.
+REFERENCES = True
+CARDMARKET_IDS_FILE = BASE_DIR / "cardmarket_ids.txt"
+
 TELEGRAM_EVERY_RUN = True        # send a summary to Telegram after every pass
 CHECK_INTERVAL_MIN = 30          # minutes between full passes (only when looping locally)
 PARALLEL_SEARCHES = 5            # eBay searches at the same time (GitHub bills every started minute)
@@ -181,13 +186,18 @@ HISTORY_COLUMNS = ["time", "card", "price", "item", "postage", "previous", "sell
 
 
 def add_history(name, offer, prev):
-    """Append one row to the history CSV whenever a card's cheapest price changes (or is first seen)."""
+    """Append one row to the history CSV whenever a card's cheapest price changes (or is first seen).
+    offer=None writes a row with an empty price: the card is no longer listed (a gap in the charts)."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     new_file = not HISTORY_FILE.exists()
     with HISTORY_FILE.open("a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         if new_file:
             writer.writerow(HISTORY_COLUMNS)
+        if offer is None:
+            writer.writerow([datetime.now().isoformat(timespec="seconds"), name, "", "", "",
+                             "" if prev is None else f"{prev['price']:.2f}", "", "", ""])
+            return
         writer.writerow([
             datetime.now().isoformat(timespec="seconds"), name, f"{offer['price']:.2f}",
             f"{offer['item']:.2f}", "" if offer["postage"] is None else f"{offer['postage']:.2f}",
@@ -492,6 +502,7 @@ def run_pass(state):
             log(f"{label}: no UK Buy It Now listings")
             if prev:
                 gone.append(f"{number}. {label} (was £{prev['price']:.2f})")
+                add_history(key, None, prev)
                 state.pop(key)
             continue
 
@@ -527,6 +538,13 @@ def run_pass(state):
     lines.append("\nReply a number for the link, or 'list' for all prices.")
     if TELEGRAM_EVERY_RUN or drops:
         send_long(header, lines)
+
+    if REFERENCES:
+        try:
+            import references
+            references.update(cards, DATA_DIR, CARDMARKET_IDS_FILE, log)
+        except Exception as e:     # reference prices are extra - never stop the eBay check
+            log(f"references: failed - {e}")
 
 
 def main():

@@ -4,3 +4,6 @@ __pycache__/
 ebay_prices.json
 ebay_history.csv
 card_names.json
+reference_history.csv
+reference_state.json
+reference_matches.json

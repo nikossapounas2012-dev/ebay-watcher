@@ -1,0 +1,294 @@
+# Cardmarket versions that could not be matched automatically.
+# Open the card on cardmarket.com, pick the exact version (set + rarity, e.g. ...-V2-Ultra-Rare),
+# and paste its link after the = sign. Lines left empty are skipped. The number is the Telegram number.
+# Example:
+#   Mirror Force | MRD-EN138 | Ultra Rare | original = https://www.cardmarket.com/en/YuGiOh/Products/Singles/Metal-Raiders/Mirror-Force-V1-Ultra-Rare
+
+
+# [My cards]
+# 1. 2 versions on Cardmarket
+Ars Magna the Finite and the Infinite | BETB-EN018 | Ultra Rare = https://www.cardmarket.com/en/YuGiOh/Products/Singles/Beyond-the-Brave/Ars-Magna-the-Finite-and-the-Infinite-V1-Ultra-Rare
+
+# [Both formats]
+# 4. 6 versions on Cardmarket
+Mirror Force | MRD-EN138 | Ultra Rare | original = 
+# 6. 4 versions on Cardmarket
+Mirror Force | DPYG-EN027 | Ultra Rare = 
+# 9. 3 versions on Cardmarket
+Mirror Force | YGLD-ENB33 | Ultra Rare = 
+# 10. 5 versions on Cardmarket
+Mirror Force | DUSA-EN048 | Ultra Rare = 
+# 12. 7 versions on Cardmarket
+Trap Dustshoot | RA05-EN077 | Ultimate Rare = 
+# 13. 7 versions on Cardmarket
+Trap Dustshoot | RA05-EN077 | Secret Rare = 
+# 14. 7 versions on Cardmarket
+Trap Dustshoot | RA05-EN077 | Ultra Rare = 
+# 15. 7 versions on Cardmarket
+Mystical Space Typhoon | SRL-047 | Ultra Rare | original = 
+# 22. 7 versions on Cardmarket
+Mystical Space Typhoon | RA02-EN048 | Ultimate Rare = 
+# 23. 7 versions on Cardmarket
+Mystical Space Typhoon | RA02-EN048 | Secret Rare = 
+# 24. 7 versions on Cardmarket
+Mystical Space Typhoon | RA02-EN048 | Ultra Rare = 
+# 25. 2 versions on Cardmarket
+Mystical Space Typhoon | RA05-EN112 | Ultra Rare = 
+# 26. 2 versions on Cardmarket
+Book of Moon | TU07-EN001 | Ultra Rare = 
+# 31. 2 versions on Cardmarket
+Book of Moon | SGX1-ENI15 | Secret Rare = 
+# 32. 7 versions on Cardmarket
+Book of Moon | RA02-EN050 | Ultimate Rare = 
+# 33. 7 versions on Cardmarket
+Book of Moon | RA02-EN050 | Secret Rare = 
+# 34. 7 versions on Cardmarket
+Book of Moon | RA02-EN050 | Ultra Rare = 
+# 35. 6 versions on Cardmarket
+Torrential Tribute | LON-EN025 | Ultra Rare = 
+# 40. 6 versions on Cardmarket
+Call of the Haunted | PSV-EN012 | Ultra Rare | original = 
+# 42. set not found on Cardmarket
+Call of the Haunted | LART-EN009 | Ultra Rare = 
+# 43. 7 versions on Cardmarket
+Call of the Haunted | RA05-EN076 | Ultimate Rare = 
+# 44. 7 versions on Cardmarket
+Call of the Haunted | RA05-EN076 | Secret Rare = 
+# 45. 7 versions on Cardmarket
+Call of the Haunted | RA05-EN076 | Ultra Rare = 
+
+# [Goat format]
+# 46. 4 versions on Cardmarket
+Black Luster Soldier - Envoy of the Beginning | IOC-EN025 | Ultra Rare = 
+# 53. 6 versions on Cardmarket
+Thousand-Eyes Restrict | PSV-EN084 | Ultra Rare | original = 
+# 57. 2 versions on Cardmarket
+Thousand-Eyes Restrict | RP02-EN021 | Ultra Rare = 
+# 65. 3 versions on Cardmarket
+Sangan | LDS3-EN001 | Ultra Rare = 
+# 66. 2 versions on Cardmarket
+Breaker the Magical Warrior | MFC-071 | Ultra Rare = 
+# 70. 7 versions on Cardmarket
+Breaker the Magical Warrior | SBCB-EN008 | Secret Rare = 
+# 72. 2 versions on Cardmarket
+D.D. Warrior Lady | SGX1-ENE04 | Secret Rare = 
+# 73. 2 versions on Cardmarket
+Airknight Parshath | LOD-EN062 | Ultra Rare = 
+# 74. 6 versions on Cardmarket
+Airknight Parshath | SBCB-EN132 | Secret Rare = 
+# 75. 7 versions on Cardmarket
+Jinzo | PSV-EN000 | Secret Rare | original = 
+# 77. set not found on Cardmarket
+Jinzo | BPT-011 | Secret Rare = 
+# 80. 2 versions on Cardmarket
+Jinzo | RP02-EN001 | Ultra Rare = 
+# 81. 4 versions on Cardmarket
+Jinzo | DUSA-EN045 | Ultra Rare = 
+# 82. set not found on Cardmarket
+Jinzo | OPTP-EN002 | Ultra Rare = 
+# 83. 4 versions on Cardmarket
+Jinzo | SBCB-EN147 | Secret Rare = 
+# 86. 2 versions on Cardmarket
+Morphing Jar | TP2-001 | Ultra Rare = 
+# 89. 2 versions on Cardmarket
+Pot of Greed | DPKB-EN029 | Ultimate Rare = 
+# 92. 7 versions on Cardmarket
+Delinquent Duo | SRL-039 | Ultra Rare | original = 
+# 96. 7 versions on Cardmarket
+Snatch Steal | SRL-036 | Ultra Rare | original = 
+# 99. 2 versions on Cardmarket
+Snatch Steal | BLTR-EN096 | Secret Rare = 
+# 100. 2 versions on Cardmarket
+Scapegoat | RP01-EN090 | Ultra Rare = 
+# 102. 3 versions on Cardmarket
+Scapegoat | OP08-EN003 | Ultimate Rare = 
+# 104. 2 versions on Cardmarket
+Scapegoat | RA05-EN111 | Ultra Rare = 
+# 105. 2 versions on Cardmarket
+Nobleman of Crossout | SBCB-EN138 | Secret Rare = 
+# 106. 6 versions on Cardmarket
+Premature Burial | PSV-EN037 | Ultra Rare | original = 
+# 110. 2 versions on Cardmarket
+Ring of Destruction | RP02-EN066 | Secret Rare = 
+# 111. 2 versions on Cardmarket
+Ring of Destruction | DPKB-EN036 | Ultimate Rare = 
+# 113. set not found on Cardmarket
+Ring of Destruction | LART-EN007 | Ultra Rare = 
+
+# [Edison format]
+# 115. 3 versions on Cardmarket
+Brionac, Dragon of the Ice Barrier | HA01-EN022 | Secret Rare = 
+# 118. printing not found on YGOPRODeck
+Black Rose Dragon | CT05-EN003 | Secret Rare = 
+# 119. printing not found on YGOPRODeck
+Black Rose Dragon | CSOC-EN039 | Ghost Rare = 
+# 120. printing not found on YGOPRODeck
+Black Rose Dragon | CSOC-EN039 | Ultimate Rare = 
+# 121. printing not found on YGOPRODeck
+Black Rose Dragon | CSOC-EN039 | Ultra Rare = 
+# 122. printing not found on YGOPRODeck
+Black Rose Dragon | LC05-EN004 | Ultra Rare = 
+# 123. printing not found on YGOPRODeck
+Black Rose Dragon | DUSA-EN077 | Ultra Rare = 
+# 124. printing not found on YGOPRODeck
+Black Rose Dragon | DUDE-EN010 | Ultra Rare = 
+# 125. printing not found on YGOPRODeck
+Black Rose Dragon | LDS2-EN110 | Ultra Rare = 
+# 126. printing not found on YGOPRODeck
+Black Rose Dragon | RA04-EN057 | Ultimate Rare = 
+# 127. printing not found on YGOPRODeck
+Black Rose Dragon | RA04-EN057 | Secret Rare = 
+# 128. printing not found on YGOPRODeck
+Black Rose Dragon | RA04-EN057 | Ultra Rare = 
+# 129. printing not found on YGOPRODeck
+Black Rose Dragon | L5DD-ENS02 | Secret Rare = 
+# 130. 4 versions on Cardmarket
+Goyo Guardian | TDGS-EN042 | Ultimate Rare = 
+# 131. 4 versions on Cardmarket
+Goyo Guardian | TDGS-EN042 | Ultra Rare = 
+# 132. set not found on Cardmarket
+Goyo Guardian | CT05-ENS03 | Secret Rare = 
+# 135. set not found on Cardmarket
+Chimeratech Fortress Dragon | JUMP-EN031 | Ultra Rare = 
+# 139. 4 versions on Cardmarket
+Judgment Dragon | LODT-EN026 | Secret Rare = 
+# 141. 2 versions on Cardmarket
+Judgment Dragon | DUSA-EN070 | Ultra Rare = 
+# 143. 2 versions on Cardmarket
+Judgment Dragon | BLC1-EN012 | Ultra Rare = 
+# 144. 2 versions on Cardmarket
+Dark Armed Dragon | PTDN-EN019 | Secret Rare = 
+# 146. 2 versions on Cardmarket
+Dark Armed Dragon | DUSA-EN067 | Ultra Rare = 
+# 150. 2 versions on Cardmarket
+Dark Armed Dragon | BLMR-EN054 | Ultra Rare = 
+# 152. 2 versions on Cardmarket
+Gorz the Emissary of Darkness | RP02-EN000 | Secret Rare = 
+# 153. set not found on Cardmarket
+Gorz the Emissary of Darkness | YR01-EN003 | Ultra Rare = 
+# 156. 2 versions on Cardmarket
+Gorz the Emissary of Darkness | BLMM-EN005 | Secret Rare = 
+# 157. set not found on Cardmarket
+Tragoedia | JUMP-EN033 | Ultra Rare = 
+# 159. 7 versions on Cardmarket
+Honest | LODT-EN001 | Ghost Rare = 
+# 160. 7 versions on Cardmarket
+Honest | LODT-EN001 | Secret Rare = 
+# 162. 3 versions on Cardmarket
+Honest | DUSA-EN069 | Ultra Rare = 
+# 163. 2 versions on Cardmarket
+Honest | BLMM-EN006 | Secret Rare = 
+# 164. 4 versions on Cardmarket
+Cyber Dragon | CRV-EN015 | Ultimate Rare = 
+# 165. set not found on Cardmarket
+Cyber Dragon | CT03-EN002 | Secret Rare = 
+# 167. 2 versions on Cardmarket
+Cyber Dragon | LCGX-EN176 | Secret Rare = 
+# 168. 2 versions on Cardmarket
+Cyber Dragon | LCGX-EN175 | Ultra Rare = 
+# 169. 2 versions on Cardmarket
+Cyber Dragon | RYMP-EN059 | Secret Rare = 
+# 170. 5 versions on Cardmarket
+Cyber Dragon | DUSA-EN057 | Ultra Rare = 
+# 172. 2 versions on Cardmarket
+Cyber Dragon | OP16-EN001 | Ultimate Rare = 
+# 173. printing not found on YGOPRODeck
+Cyber Dragon | SGX1-ENG01 | Secret Rare = 
+# 174. printing not found on YGOPRODeck
+Cyber Dragon | GFP2-EN178 | Ghost Rare = 
+# 175. printing not found on YGOPRODeck
+Cyber Dragon | SGX3-ENI28 | Secret Rare = 
+# 176. printing not found on YGOPRODeck
+Cyber Dragon | BLC1-EN020 | Ultra Rare = 
+# 177. printing not found on YGOPRODeck
+Cyber Dragon | BLC1-EN021 | Ultra Rare = 
+# 178. 4 versions on Cardmarket
+Card Trooper | DP03-EN009 | Ultra Rare = 
+# 181. set not found on Cardmarket
+Dandylion | JUMP-EN029 | Ultra Rare = 
+# 186. 3 versions on Cardmarket
+Quickdraw Synchron | LDS3-EN117 | Ultra Rare = 
+# 189. 7 versions on Cardmarket
+Ryko, Lightsworn Hunter | RA02-EN003 | Ultimate Rare = 
+# 190. 7 versions on Cardmarket
+Ryko, Lightsworn Hunter | RA02-EN003 | Secret Rare = 
+# 191. 7 versions on Cardmarket
+Ryko, Lightsworn Hunter | RA02-EN003 | Ultra Rare = 
+# 192. 3 versions on Cardmarket
+Plaguespreader Zombie | CSOC-EN031 | Ultimate Rare = 
+# 193. 3 versions on Cardmarket
+Plaguespreader Zombie | CSOC-EN031 | Ultra Rare = 
+# 195. 3 versions on Cardmarket
+Necro Gardna | TAEV-EN012 | Ultimate Rare = 
+# 199. 3 versions on Cardmarket
+Blackwing - Gale the Whirlwind | DUSA-EN078 | Ultra Rare = 
+# 201. 4 versions on Cardmarket
+Blackwing Armor Master | CRMS-EN041 | Ultimate Rare = 
+# 202. 4 versions on Cardmarket
+Blackwing Armor Master | CRMS-EN041 | Ultra Rare = 
+# 204. set not found on Cardmarket
+Blackwing Armor Master | L5DD-ENC27 | Ultra Rare = 
+# 205. 2 versions on Cardmarket
+Machina Fortress | SDMM-EN001 | Ultra Rare = 
+# 207. 4 versions on Cardmarket
+Pot of Avarice | EEN-EN037 | Ultimate Rare = 
+# 210. 2 versions on Cardmarket
+Pot of Avarice | RA05-EN114 | Ultra Rare = 
+# 213. set not found on Cardmarket
+Foolish Burial | LART-EN016 | Ultra Rare = 
+# 214. 2 versions on Cardmarket
+Foolish Burial | SBCB-EN139 | Secret Rare = 
+# 215. printing not found on YGOPRODeck
+Foolish Burial | RA02-EN049 | Ultimate Rare = 
+# 216. printing not found on YGOPRODeck
+Foolish Burial | RA02-EN049 | Secret Rare = 
+# 217. printing not found on YGOPRODeck
+Foolish Burial | RA02-EN049 | Ultra Rare = 
+# 218. printing not found on YGOPRODeck
+Foolish Burial | CH01-EN031 | Ultra Rare = 
+# 219. printing not found on YGOPRODeck
+Foolish Burial | RA05-EN138 | Ultra Rare = 
+# 220. 2 versions on Cardmarket
+Charge of the Light Brigade | TDGS-EN089 | Secret Rare = 
+# 221. 7 versions on Cardmarket
+Charge of the Light Brigade | RA02-EN055 | Ultimate Rare = 
+# 222. 7 versions on Cardmarket
+Charge of the Light Brigade | RA02-EN055 | Secret Rare = 
+# 223. 7 versions on Cardmarket
+Charge of the Light Brigade | RA02-EN055 | Ultra Rare = 
+# 226. 7 versions on Cardmarket
+Mind Control | RA02-EN046 | Ultimate Rare = 
+# 227. 7 versions on Cardmarket
+Mind Control | RA02-EN046 | Secret Rare = 
+# 228. 7 versions on Cardmarket
+Mind Control | RA02-EN046 | Ultra Rare = 
+# 229. 4 versions on Cardmarket
+Brain Control | TLM-EN038 | Ultimate Rare = 
+# 231. 4 versions on Cardmarket
+Brain Control | DUSA-EN046 | Ultra Rare = 
+# 232. 6 versions on Cardmarket
+Solemn Judgment | MRD-EN127 | Ultra Rare | original = 
+# 234. 3 versions on Cardmarket
+Solemn Judgment | GLD5-EN045 | Ghost/Gold Rare = 
+# 239. set not found on Cardmarket
+Solemn Judgment | LART-EN014 | Ultra Rare = 
+# 240. 7 versions on Cardmarket
+Solemn Judgment | RA02-EN075 | Ultimate Rare = 
+# 241. 7 versions on Cardmarket
+Solemn Judgment | RA02-EN075 | Secret Rare = 
+# 242. 7 versions on Cardmarket
+Solemn Judgment | RA02-EN075 | Ultra Rare = 
+# 243. 2 versions on Cardmarket
+Solemn Judgment | RA05-EN124 | Ultra Rare = 
+# 244. 3 versions on Cardmarket
+Starlight Road | DPCT-EN004 | Secret Rare = 
+# 250. 7 versions on Cardmarket
+Compulsory Evacuation Device | RA01-EN069 | Ultimate Rare = 
+# 251. 7 versions on Cardmarket
+Compulsory Evacuation Device | RA01-EN069 | Secret Rare = 
+# 252. 7 versions on Cardmarket
+Compulsory Evacuation Device | RA01-EN069 | Ultra Rare = 
+# 253. 2 versions on Cardmarket
+Compulsory Evacuation Device | RA05-EN125 | Ultra Rare = 
+# 259. set not found on Cardmarket
+Icarus Attack | L5DD-ENC23 | Ultra Rare = 

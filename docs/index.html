@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card Price Charts</title>
+<meta name="description" content="Cheapest UK Buy It Now price for each watched Yu-Gi-Oh! printing, checked every 2 hours.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 12 5 8l3 2 7-7' fill='none' stroke='%232f6fdb' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --text: #16191d; --muted: #646b75; --faint: #9aa1ab;
+  --border: #e3e6ea; --hover: #f0f3f7; --line: #2f6fdb; --low: #16884a; --low-bg: #e3f4ea;
+  --now: #c05a00; --up: #c62f2f; --grid: #eceef1; --focus: #2f6fdb; --cm: #7b4fd6; --tcg: #6f7b89;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111317; --panel: #1a1d22; --text: #e8eaed; --muted: #a0a6b0; --faint: #6c737d;
+    --border: #2c3037; --hover: #22262c; --line: #6b9ff5; --low: #4cc584; --low-bg: #193326;
+    --now: #f29a45; --up: #f07070; --grid: #262a30; --focus: #6b9ff5; --cm: #b195f5; --tcg: #8e9aa8;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111317; --panel: #1a1d22; --text: #e8eaed; --muted: #a0a6b0; --faint: #6c737d;
+  --border: #2c3037; --hover: #22262c; --line: #6b9ff5; --low: #4cc584; --low-bg: #193326;
+  --now: #f29a45; --up: #f07070; --grid: #262a30; --focus: #6b9ff5; --cm: #b195f5; --tcg: #8e9aa8;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+.sub { color: var(--muted); margin: 0 0 20px; font-size: 14px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 20px; }
+.stat b { display: block; font-size: 20px; }
+.stat span { color: var(--muted); font-size: 13px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.controls input, .controls select {
+  font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; min-height: 38px;
+}
+.controls input { flex: 1 1 220px; min-width: 0; }
+.controls select { flex: 0 1 auto; max-width: 100%; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+.list { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.section-head {
+  padding: 10px 16px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--muted); background: var(--bg); border-top: 1px solid var(--border);
+}
+.section-head:first-child { border-top: 0; }
+.row {
+  display: grid; grid-template-columns: 36px minmax(0, 1fr) 168px 92px 104px 104px;
+  gap: 12px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--border);
+  cursor: pointer; width: 100%; text-align: left; background: none; border-left: 0; border-right: 0;
+  border-bottom: 0; font: inherit; color: inherit;
+}
+.section-head + .row { border-top: 0; }
+.row:hover { background: var(--hover); }
+.num { color: var(--faint); font-size: 13px; }
+.name, .who .meta { display: block; }
+.name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.meta { color: var(--muted); font-size: 13px; }
+.price { text-align: right; }
+.price b { font-size: 16px; display: block; }
+.price small { color: var(--muted); font-size: 12px; display: block; white-space: nowrap; }
+.price.now b { color: var(--now); }
+.price.low b { color: var(--low); }
+.price.mkt b { color: var(--cm); }
+.price.mkt b.tcg { color: var(--tcg); }
+.price .none { color: var(--faint); font-weight: 400; font-size: 14px; }
+.badge.deal { color: var(--now); background: transparent; border: 1px solid var(--now); margin-left: 0; }
+.legend i.ln { width: 14px; height: 0; border-radius: 0; border-top: 2px dashed; vertical-align: 3px; background: none; }
+.refs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 20px; margin: 0 0 12px; font-size: 13px; }
+.refs b { display: block; font-size: 14px; }
+.refs .meta { display: block; }
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 600; color: var(--low); background: var(--low-bg);
+  padding: 1px 6px; border-radius: 99px; margin-left: 4px; vertical-align: 1px;
+}
+.chg-down { color: var(--low); } .chg-up { color: var(--up); }
+.spark, .sparkslot { display: block; width: 168px; height: 44px; }
+.detail { padding: 4px 16px 20px; border-top: 1px dashed var(--border); background: var(--panel); }
+.detail .big { width: 100%; height: 240px; display: block; touch-action: pan-y; }
+.detail .links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 4px 0 12px; font-size: 14px; }
+a { color: var(--line); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px 6px 0; border-top: 1px solid var(--border); vertical-align: top; }
+th { color: var(--muted); font-weight: 500; border-top: 0; }
+td.r, th.r { text-align: right; }
+.tbl { overflow-x: auto; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--text); color: var(--bg); font-size: 12px;
+  padding: 4px 8px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, -120%); display: none;
+}
+.chartbox { position: relative; }
+.msg { padding: 32px 16px; text-align: center; color: var(--muted); }
+.foot { color: var(--faint); font-size: 12px; margin-top: 16px; }
+@media (max-width: 720px) {
+  .row {
+    grid-template-columns: 22px repeat(3, minmax(0, 1fr)); grid-template-areas:
+      "num name name name" ". spark spark spark" ". now low mkt";
+    gap: 4px 12px;
+  }
+  .row .num { grid-area: num; } .row .who { grid-area: name; }
+  .row .sparkslot, .row .spark { grid-area: spark; width: 100%; }
+  .row .now { grid-area: now; text-align: left; } .row .low { grid-area: low; text-align: left; }
+  .row .mkt { grid-area: mkt; text-align: left; }
+  .detail .big { height: 200px; }
+  .hide-sm { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Card price charts</h1>
+  <p class="sub">Cheapest UK Buy It Now listing for each printing, postage included, checked every 2 hours —
+    next to Cardmarket (EU) and TCGplayer (US) market prices in pounds, saved daily.</p>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="controls">
+    <input id="q" type="search" placeholder="Search card, set code or number" aria-label="Search">
+    <select id="section" aria-label="Section"><option value="">All sections</option></select>
+    <select id="show" aria-label="Show">
+      <option value="all">All printings</option>
+      <option value="listed">Listed now</option>
+      <option value="atlow">At their lowest now</option>
+      <option value="deals">Under market price</option>
+    </select>
+    <select id="sort" aria-label="Sort">
+      <option value="num">Sort: list order</option>
+      <option value="deal">Sort: best deal vs market</option>
+      <option value="drop">Sort: biggest drop</option>
+      <option value="asc">Sort: cheapest first</option>
+      <option value="desc">Sort: dearest first</option>
+    </select>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--now)"></i>Current lowest</span>
+    <span><i style="background:var(--low)"></i>Lowest found</span>
+    <span><i class="ln" style="color:var(--cm)"></i>Cardmarket trend</span>
+    <span><i class="ln" style="color:var(--tcg)"></i>TCGplayer market</span>
+    <span>▼▲ change since first seen</span>
+    <span>Tap a card for its full chart and price changes</span>
+  </div>
+
+  <div class="list" id="list"><div class="msg">Loading prices…</div></div>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+const REPO = "nikossapounas2012-dev/ebay-watcher";
+const RAW = `https://raw.githubusercontent.com/${REPO}`;
+const RARITY_SHORT = { "secret rare": "ScR", "ultra rare": "UR", "ultimate rare": "UtR",
+                       "ghost rare": "GR", "ghost/gold rare": "GGR" };
+const SOURCES = {
+  cardmarket: { label: "Cardmarket", what: "trend", color: "var(--cm)" },
+  tcgplayer: { label: "TCGplayer", what: "market", color: "var(--tcg)" },
+};
+const DEAL = 0.8;   // an eBay price at or under 80% of the market price counts as a deal
+const SVG = "http://www.w3.org/2000/svg";
+let cards = [];
+const open = new Set();
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const gbp = (n) => "£" + n.toFixed(2);
+const num = (s) => (s === "" || s == null ? null : parseFloat(s));
+// times are written by the GitHub runner in UTC without a zone
+const utc = (s) => new Date(s.endsWith("Z") ? s : s + "Z");
+const fmt = (d, withYear) => d.toLocaleString("en-GB", { day: "numeric", month: "short",
+  ...(withYear ? { year: "numeric" } : {}), hour: "2-digit", minute: "2-digit" });
+const fmtDay = (d) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+
+async function getText(path) {
+  const r = await fetch(`${RAW}/${path}?t=${Date.now()}`, { cache: "no-store" });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);
+  return r.text();
+}
+
+// same rules as load_cards() in ebay_watch.py, so the numbers match Telegram
+function parseCards(text) {
+  const out = []; let section = "";
+  for (let line of text.split(/\r?\n/)) {
+    line = line.trim();
+    if (!line || line.startsWith("#")) continue;
+    if (line.startsWith("[") && line.endsWith("]")) { section = line.slice(1, -1).trim(); continue; }
+    const p = line.split("|").map((s) => s.trim()).concat(["", "", ""]);
+    const name = p[0], code = p[1].toUpperCase(), rarity = p[2].toLowerCase(), edition = p[3].toLowerCase();
+    out.push({ n: out.length + 1, section, name, code, rarity: RARITY_SHORT[rarity] || p[2],
+               edition, key: line });
+  }
+  return out;
+}
+
+function parseCSV(text) {
+  const rows = []; let row = [], field = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; }
+      else field += c;
+    } else if (c === '"') q = true;
+    else if (c === ",") { row.push(field); field = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(field); rows.push(row); row = []; field = "";
+    } else field += c;
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  const head = rows.shift() || [];
+  return rows.filter((r) => r.length > 1).map((r) => Object.fromEntries(head.map((h, i) => [h, r[i] ?? ""])));
+}
+
+function build(cardText, historyText, pricesText, refText, matchesText) {
+  const list = parseCards(cardText);
+  const prices = pricesText ? JSON.parse(pricesText) : {};
+  const matches = matchesText ? JSON.parse(matchesText) : {};
+  const hist = {}, refs = {};
+  for (const r of historyText ? parseCSV(historyText) : []) {
+    (hist[r.card] ||= []).push({ t: utc(r.time), price: num(r.price), postage: num(r.postage),
+                                 seller: r.seller, title: r.title, url: r.url });
+  }
+  // reference prices are daily; plot them at midday UTC of their date
+  for (const r of refText ? parseCSV(refText) : []) {
+    ((refs[r.card] ||= {})[r.source] ||= []).push({ t: utc(r.date + "T12:00:00"), price: num(r.price),
+      low: num(r.low), avg30: num(r.avg30), product: r.product });
+  }
+  for (const c of list) {
+    const pts = (hist[c.key] || []).sort((a, b) => a.t - b.t);
+    const cur = prices[c.key] || null;
+    if (cur) cur.t = utc(cur.checked);
+    c.points = pts;
+    c.current = cur;
+    const priced = pts.filter((p) => p.price !== null);
+    if (cur && !priced.length) priced.push({ t: cur.t, price: cur.price, seller: cur.seller, url: cur.url });
+    c.lowest = priced.reduce((m, p) => (!m || p.price < m.price ? p : m), null);
+    c.first = priced[0] || null;
+    c.atLow = !!(cur && c.lowest && cur.price <= c.lowest.price);
+    c.drop = cur && c.first ? (cur.price - c.first.price) / c.first.price : null;
+    c.end = cur ? cur.t : (pts.length ? pts[pts.length - 1].t : null);
+
+    c.refs = {}; c.latest = {};
+    for (const s in SOURCES) {
+      const series = ((refs[c.key] || {})[s] || []).sort((a, b) => a.t - b.t);
+      if (series.length) { c.refs[s] = series; c.latest[s] = series[series.length - 1]; }
+    }
+    c.matches = matches[c.key] || {};
+    // the market price shown in the list: Cardmarket (closer to UK prices), else TCGplayer
+    const ms = c.latest.cardmarket ? "cardmarket" : c.latest.tcgplayer ? "tcgplayer" : null;
+    c.market = ms ? { source: ms, ...c.latest[ms] } : null;
+    c.vsMarket = cur && c.market && c.market.price ? cur.price / c.market.price - 1 : null;
+    c.deal = c.vsMarket !== null && c.vsMarket <= DEAL - 1;
+    c.search = `${c.n} ${c.name} ${c.code} ${c.rarity} ${c.section}`.toLowerCase();
+  }
+  return list;
+}
+
+// ---------- charts ----------
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(SVG, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+// value of a step series at time t (the last change at or before t)
+function valueAt(series, t) {
+  let p = null;
+  for (const q of series) if (q.t.getTime() <= t) p = q;
+  return p;
+}
+
+// step lines: a price holds until the next change; an empty eBay price means "not listed" (a gap)
+function geometry(c, w, h, pad, sources) {
+  const ebay = c.points.length ? c.points : (c.current ? [{ t: c.current.t, price: c.current.price }] : []);
+  const refs = sources.filter((s) => c.refs[s]).map((s) => [s, c.refs[s]]);
+  const all = ebay.concat(...refs.map(([, r]) => r));
+  if (!all.length) return null;
+  const times = all.map((p) => p.t.getTime());
+  if (c.end) times.push(c.end.getTime());
+  const t0 = Math.min(...times);
+  let t1 = Math.max(...times);
+  const real = t1 - t0 >= 3600e3;
+  if (!real) t1 = t0 + 3600e3;   // a single check still draws a short flat line (no end date shown)
+  const vals = all.filter((p) => p.price !== null).map((p) => p.price);
+  if (c.current) vals.push(c.current.price);
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  const span = hi - lo || Math.max(hi * 0.2, 1);
+  lo -= span * 0.15; hi += span * 0.15;
+  if (lo < 0) lo = 0;
+  const x = (t) => pad.l + ((t - t0) / (t1 - t0)) * (w - pad.l - pad.r);
+  const y = (v) => pad.t + (1 - (v - lo) / (hi - lo)) * (h - pad.t - pad.b);
+  const path = (pts) => {
+    const runs = []; let run = null;
+    pts.forEach((p, i) => {
+      if (p.price === null) { if (run) { run.push([x(p.t.getTime()), run[run.length - 1][1]]); runs.push(run); run = null; } return; }
+      const px = x(p.t.getTime()), py = y(p.price);
+      if (!run) run = [[px, py]];
+      else { run.push([px, run[run.length - 1][1]]); run.push([px, py]); }
+      if (i === pts.length - 1) { run.push([x(t1), py]); runs.push(run); run = null; }
+    });
+    if (run) runs.push(run);
+    return runs.map((r) => r.map(([a, b], i) => `${i ? "L" : "M"}${a.toFixed(1)},${b.toFixed(1)}`).join("")).join("");
+  };
+  return { d: ebay.length ? path(ebay) : "", refs: refs.map(([s, r]) => [s, path(r), r]),
+           x, y, t0, t1, lo, hi, pts: ebay, real };
+}
+
+function markers(svg, c, g, r) {
+  if (c.lowest) {
+    el("circle", { cx: g.x(c.lowest.t.getTime()), cy: g.y(c.lowest.price), r, fill: "var(--low)",
+                   stroke: "var(--panel)", "stroke-width": 1.5 }, svg);
+  }
+  if (c.current) {
+    el("circle", { cx: g.x(g.t1), cy: g.y(c.current.price), r, fill: "var(--now)",
+                   stroke: "var(--panel)", "stroke-width": 1.5 }, svg);
+  }
+}
+
+function refLines(svg, g, width) {
+  for (const [s, d] of g.refs) {
+    el("path", { d, fill: "none", stroke: SOURCES[s].color, "stroke-width": width,
+                 "stroke-dasharray": "4 3", "stroke-linejoin": "round" }, svg);
+  }
+}
+
+function spark(c, width) {
+  const w = Math.max(Math.round(width) || 168, 60), h = 44;   // drawn at its real width so dots stay round
+  const svg = el("svg", { viewBox: `0 0 ${w} ${h}`, class: "spark", "aria-hidden": "true" });
+  const g = geometry(c, w, h, { l: 5, r: 5, t: 6, b: 6 }, c.market ? [c.market.source] : []);
+  if (!g) {
+    el("line", { x1: 5, x2: w - 5, y1: h / 2, y2: h / 2, stroke: "var(--grid)", "stroke-dasharray": "3 3" }, svg);
+    return svg;
+  }
+  refLines(svg, g, 1.25);
+  el("path", { d: g.d, fill: "none", stroke: "var(--line)", "stroke-width": 1.75, "stroke-linejoin": "round" }, svg);
+  markers(svg, c, g, 3.5);
+  return svg;
+}
+
+function niceTicks(lo, hi, n) {
+  const raw = (hi - lo) / n, mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw);
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(v);
+  return out;
+}
+
+function bigChart(box, c) {
+  box.innerHTML = "";
+  const w = Math.max(box.clientWidth, 280), h = box.clientHeight || 240;
+  const svg = el("svg", { viewBox: `0 0 ${w} ${h}`, class: "big", role: "img",
+    "aria-label": `Price history for ${c.name}` }, box);
+  const pad = { l: 52, r: 16, t: 16, b: 28 };
+  const g = geometry(c, w, h, pad, Object.keys(SOURCES));
+  if (!g) { box.innerHTML = '<div class="msg">No prices recorded yet.</div>'; return; }
+  for (const v of niceTicks(g.lo, g.hi, 4)) {
+    el("line", { x1: pad.l, x2: w - pad.r, y1: g.y(v), y2: g.y(v), stroke: "var(--grid)" }, svg);
+    el("text", { x: pad.l - 8, y: g.y(v) + 4, "text-anchor": "end", "font-size": 11, fill: "var(--muted)" }, svg)
+      .textContent = "£" + (v % 1 ? v.toFixed(2) : v);
+  }
+  const days = (g.t1 - g.t0) / 864e5;
+  const xl = (t) => days > 2 ? fmtDay(new Date(t)) : new Date(t).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  el("text", { x: pad.l, y: h - 8, "font-size": 11, fill: "var(--muted)" }, svg).textContent = xl(g.t0);
+  if (g.real) el("text", { x: w - pad.r, y: h - 8, "font-size": 11, fill: "var(--muted)", "text-anchor": "end" }, svg).textContent = xl(g.t1);
+  if (c.lowest) {
+    const ly = g.y(c.lowest.price);
+    el("line", { x1: pad.l, x2: w - pad.r, y1: ly, y2: ly, stroke: "var(--low)", "stroke-dasharray": "2 4", opacity: 0.6 }, svg);
+  }
+  refLines(svg, g, 1.75);
+  el("path", { d: g.d, fill: "none", stroke: "var(--line)", "stroke-width": 2.25, "stroke-linejoin": "round" }, svg);
+  markers(svg, c, g, 5);
+  if (c.lowest) {
+    const lx = g.x(c.lowest.t.getTime()), ly = g.y(c.lowest.price);
+    el("text", { x: Math.min(lx + 8, w - pad.r - 90), y: ly + 16, "paint-order": "stroke", stroke: "var(--panel)", "stroke-width": 4, "font-size": 12, "font-weight": 600, fill: "var(--low)" }, svg)
+      .textContent = `Lowest ${gbp(c.lowest.price)}`;
+  }
+  if (c.current) {
+    el("text", { x: w - pad.r - 8, y: g.y(c.current.price) - 10, "paint-order": "stroke", stroke: "var(--panel)", "stroke-width": 4, "font-size": 12, "font-weight": 600,
+                 fill: "var(--now)", "text-anchor": "end" }, svg).textContent = `Now ${gbp(c.current.price)}`;
+  }
+
+  // hover / touch readout: eBay plus each reference at that moment
+  const tip = document.createElement("div"); tip.className = "tip"; box.appendChild(tip);
+  const guide = el("line", { y1: pad.t, y2: h - pad.b, stroke: "var(--faint)", "stroke-width": 1, display: "none" }, svg);
+  const move = (ev) => {
+    const rect = svg.getBoundingClientRect();
+    const px = ((ev.clientX - rect.left) / rect.width) * w;
+    if (px < pad.l || px > w - pad.r) return hide();
+    const t = g.t0 + ((px - pad.l) / (w - pad.l - pad.r)) * (g.t1 - g.t0);
+    const parts = [];
+    const p = valueAt(g.pts, t);
+    if (p) parts.push(`eBay ${p.price === null ? "not listed" : gbp(p.price)}`);
+    for (const [s, , series] of g.refs) {
+      const r = valueAt(series, t);
+      if (r && r.price !== null) parts.push(`${SOURCES[s].label} ${gbp(r.price)}`);
+    }
+    if (!parts.length) return hide();
+    guide.setAttribute("x1", px); guide.setAttribute("x2", px); guide.setAttribute("display", "");
+    tip.textContent = `${fmt(new Date(t))} · ${parts.join(" · ")}`;
+    tip.style.left = Math.min(Math.max((px / w) * rect.width, 120), rect.width - 120) + "px";
+    tip.style.top = (pad.t + 8) / h * rect.height + "px";
+    tip.style.display = "block";
+  };
+  const hide = () => { tip.style.display = "none"; guide.setAttribute("display", "none"); };
+  svg.addEventListener("pointermove", move);
+  svg.addEventListener("pointerdown", move);
+  svg.addEventListener("pointerleave", hide);
+}
+
+// ---------- list ----------
+const pct = (v) => `${Math.abs(v * 100).toFixed(0)}%`;
+
+function rowHTML(c) {
+  const meta = [c.code, c.rarity, c.edition === "25th" ? "25th Anniversary" : c.edition === "original" ? "original print" : ""]
+    .filter(Boolean).join(" · ") || "any printing";
+  let now;
+  if (c.current) {
+    const chg = c.drop && Math.abs(c.drop) >= 0.005
+      ? ` <span class="${c.drop < 0 ? "chg-down" : "chg-up"}">${c.drop < 0 ? "▼" : "▲"}${pct(c.drop)}</span>` : "";
+    now = `<b>${gbp(c.current.price)}</b><small>${c.deal ? `<span class="badge deal">${pct(c.vsMarket)} under</span>` : "now" + chg}</small>`;
+  } else {
+    now = `<b class="none">not listed</b><small>${c.end ? "since " + fmtDay(c.end) : "no data yet"}</small>`;
+  }
+  const low = c.lowest
+    ? `<b>${gbp(c.lowest.price)}</b><small>${c.atLow ? '<span class="badge">now</span>' : "lowest · " + fmtDay(c.lowest.t)}</small>`
+    : `<b class="none">–</b>`;
+  const mkt = c.market
+    ? `<b class="${c.market.source === "tcgplayer" ? "tcg" : ""}">${gbp(c.market.price)}</b><small>${SOURCES[c.market.source].label}</small>`
+    : `<b class="none">–</b><small>no market price</small>`;
+  return `<span class="num">${c.n}</span>
+    <span class="who"><span class="name">${esc(c.name)}</span><span class="meta">${esc(meta)}</span></span>
+    <span class="sparkslot"></span>
+    <span class="price now">${now}</span>
+    <span class="price low">${low}</span>
+    <span class="price mkt">${mkt}</span>`;
+}
+
+function refHTML(c, s) {
+  const r = c.latest[s], m = c.matches[s] || {};
+  const label = `<b style="color:${SOURCES[s].color}">${SOURCES[s].label}</b>`;
+  if (!r) return `<div>${label}<span class="meta">${esc(m.note || "no price yet")}</span></div>`;
+  const extra = [r.avg30 !== null ? `30-day avg ${gbp(r.avg30)}` : "", r.low !== null ? `lowest listing ${gbp(r.low)}` : ""]
+    .filter(Boolean).join(" · ");
+  const url = s === "tcgplayer" ? `https://www.tcgplayer.com/product/${encodeURIComponent(r.product)}`
+    : `https://www.cardmarket.com/en/YuGiOh/Products/Search?searchString=${encodeURIComponent(c.name)}`;
+  return `<div>${label}${SOURCES[s].what} ${gbp(r.price)} <span class="meta">${fmtDay(r.t)}</span>
+    <span class="meta">${extra}</span>
+    <a href="${url}" target="_blank" rel="noopener">${s === "tcgplayer" ? "Open on TCGplayer" : "Search Cardmarket"} ↗</a></div>`;
+}
+
+function detailHTML(c) {
+  const links = [];
+  if (c.current) links.push(`<a href="${esc(c.current.url)}" target="_blank" rel="noopener">Cheapest now: ${gbp(c.current.price)} from ${esc(c.current.seller)} ↗</a>`);
+  if (c.lowest && c.lowest.url && !c.atLow) links.push(`<a href="${esc(c.lowest.url)}" target="_blank" rel="noopener">Lowest found: ${gbp(c.lowest.price)} on ${fmt(c.lowest.t)} (may have sold) ↗</a>`);
+  const rows = [...c.points].reverse().map((p) => `<tr>
+      <td>${fmt(p.t, true)}</td>
+      <td class="r">${p.price === null ? '<span class="meta">not listed</span>' : gbp(p.price)}</td>
+      <td class="hide-sm">${p.postage === null || p.price === null ? "" : gbp(p.postage)}</td>
+      <td>${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.seller || "listing")}</a>` : ""}</td>
+    </tr>`).join("");
+  return `<div class="chartbox"></div>
+    <div class="links">${links.join("") || '<span class="meta">No eBay listing right now.</span>'}</div>
+    <div class="refs">${Object.keys(SOURCES).map((s) => refHTML(c, s)).join("")}</div>
+    ${rows ? `<div class="tbl"><table><thead><tr><th>eBay change</th><th class="r">Price</th><th class="hide-sm">Postage</th><th>Seller</th></tr></thead><tbody>${rows}</tbody></table></div>` : ""}`;
+}
+
+function render() {
+  const q = $("q").value.trim().toLowerCase(), sec = $("section").value, show = $("show").value, sort = $("sort").value;
+  const keep = { all: () => true, listed: (c) => c.current, atlow: (c) => c.atLow, deals: (c) => c.vsMarket !== null && c.vsMarket < 0 };
+  let rows = cards.filter((c) => (!q || q.split(/\s+/).every((w) => c.search.includes(w)))
+    && (!sec || c.section === sec) && keep[show](c));
+  const price = (c) => (c.current ? c.current.price : Infinity);
+  if (sort === "asc") rows.sort((a, b) => price(a) - price(b));
+  if (sort === "desc") rows.sort((a, b) => (b.current ? b.current.price : -1) - (a.current ? a.current.price : -1));
+  if (sort === "drop") rows.sort((a, b) => (a.drop ?? Infinity) - (b.drop ?? Infinity));
+  if (sort === "deal") rows.sort((a, b) => (a.vsMarket ?? Infinity) - (b.vsMarket ?? Infinity));
+
+  const list = $("list"); list.innerHTML = "";
+  if (!rows.length) { list.innerHTML = '<div class="msg">No cards match.</div>'; return; }
+  let shown = null;
+  for (const c of rows) {
+    if (sort === "num" && c.section !== shown) {
+      const h = document.createElement("div"); h.className = "section-head"; h.textContent = c.section || "Cards";
+      list.appendChild(h); shown = c.section;
+    }
+    const b = document.createElement("button");
+    b.className = "row"; b.innerHTML = rowHTML(c);
+    b.setAttribute("aria-expanded", open.has(c.n));
+    list.appendChild(b);
+    const slot = b.querySelector(".sparkslot");
+    slot.replaceWith(spark(c, slot.getBoundingClientRect().width));
+    const d = document.createElement("div"); d.className = "detail"; d.hidden = !open.has(c.n);
+    list.appendChild(d);
+    const fill = () => { d.innerHTML = detailHTML(c); bigChart(d.querySelector(".chartbox"), c); };
+    if (open.has(c.n)) requestAnimationFrame(fill);
+    b.addEventListener("click", () => {
+      if (open.has(c.n)) { open.delete(c.n); d.hidden = true; }
+      else { open.add(c.n); d.hidden = false; fill(); }
+      b.setAttribute("aria-expanded", open.has(c.n));
+    });
+  }
+}
+
+function stats() {
+  const listed = cards.filter((c) => c.current);
+  const atLow = cards.filter((c) => c.atLow).length;
+  const deals = cards.filter((c) => c.deal).length;
+  const last = listed.reduce((m, c) => (c.current.t > m ? c.current.t : m), new Date(0));
+  const firstSeen = cards.flatMap((c) => c.points.map((p) => p.t)).reduce((m, t) => (!m || t < m ? t : m), null);
+  $("stats").innerHTML = [
+    [cards.length, "printings watched"],
+    [listed.length, "listed now"],
+    [atLow, "at their lowest now"],
+    [deals, `${pct(1 - DEAL)}+ under market`],
+    [listed.length ? fmt(last) : "–", "last check"],
+  ].map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
+  $("foot").textContent = (firstSeen ? `eBay prices recorded since ${fmt(firstSeen, true)}. Lowest found is the cheapest listing seen at any check — it may have sold since. ` : "")
+    + "Market price: Cardmarket trend (EU sales) where matched, otherwise TCGplayer market price (US sales), converted to pounds at that day's ECB rate.";
+}
+
+async function load() {
+  try {
+    const [cardText, historyText, pricesText, refText, matchesText] = await Promise.all([
+      getText("main/ebay_cards.txt"), getText("data/ebay_history.csv"), getText("data/ebay_prices.json"),
+      getText("data/reference_history.csv"), getText("data/reference_matches.json")]);
+    if (!cardText) throw new Error("ebay_cards.txt not found");
+    cards = build(cardText, historyText, pricesText, refText, matchesText);
+    const secs = [...new Set(cards.map((c) => c.section))].filter(Boolean);
+    $("section").innerHTML = '<option value="">All sections</option>' + secs.map((s) => `<option>${esc(s)}</option>`).join("");
+    stats(); render();
+  } catch (e) {
+    $("list").innerHTML = `<div class="msg">Could not load prices: ${esc(e.message)}</div>`;
+  }
+}
+
+for (const id of ["q", "section", "show", "sort"]) $(id).addEventListener("input", render);
+let rt, lastW = innerWidth;
+addEventListener("resize", () => { if (innerWidth === lastW) return; lastW = innerWidth; clearTimeout(rt); rt = setTimeout(render, 150); });
+load();
+</script>
+</body>
+</html>
