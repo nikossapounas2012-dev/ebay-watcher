@@ -1,0 +1,39 @@
+name: Telegram replies
+
+# Answers "12" / "3 7 15" replies in Telegram with the eBay links, between the price checks.
+# Every 5 minutes is the fastest GitHub allows (it often runs a few minutes late).
+# Uses ~8,600 minutes a month: free only if the repository is PUBLIC.
+# On a private repository, delete this file - replies are then answered at each price check instead.
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ebay-watch          # shared with the price check, so a reply is never answered twice
+  cancel-in-progress: false
+
+jobs:
+  replies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get saved prices
+        env:
+          REPO_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+        run: |
+          if git ls-remote --exit-code --heads "$REPO_URL" data > /dev/null; then
+            git clone --quiet --depth 1 --branch data "$REPO_URL" data
+          else
+            mkdir data
+          fi
+
+      - name: Answer replies
+        run: python3 ebay_watch.py --replies
+        env:
+          DATA_DIR: data
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

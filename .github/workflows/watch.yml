@@ -2,8 +2,13 @@ name: eBay price watch
 
 on:
   schedule:
-    - cron: "*/30 * * * *"   # every 30 minutes (UTC). GitHub often starts a few minutes late.
+    # every 2 hours at :17 (UTC). ~260 printings x 12 runs = ~3,100 eBay searches a day
+    # (eBay allows 5,000). GitHub often starts a few minutes late.
+    - cron: "17 */2 * * *"
   workflow_dispatch:          # adds a "Run workflow" button to run it by hand
+
+permissions:
+  contents: write            # needed to save prices + history to the "data" branch
 
 concurrency:
   group: ebay-watch          # never run two checks at the same time
@@ -12,7 +17,7 @@ concurrency:
 jobs:
   watch:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -20,26 +25,40 @@ jobs:
         with:
           python-version: "3.12"
 
-      # bring back the last saved prices, so drops can be detected between runs
-      - name: Restore saved prices
-        uses: actions/cache/restore@v4
-        with:
-          path: ebay_prices.json
-          key: ebay-prices-${{ github.run_id }}
-          restore-keys: ebay-prices-
+      # saved prices + history live on a separate "data" branch,
+      # so these automatic commits never clash with code changes on main
+      - name: Get saved data
+        env:
+          REPO_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+        run: |
+          if git ls-remote --exit-code --heads "$REPO_URL" data > /dev/null; then
+            git clone --quiet --depth 1 --branch data "$REPO_URL" data
+          else
+            mkdir data
+            git -C data init --quiet -b data
+            git -C data remote add origin "$REPO_URL"
+          fi
 
       - name: Check prices
         run: python ebay_watch.py --once
         env:
+          DATA_DIR: data
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
-      # save the new prices for the next run
-      - name: Save prices
+      # save even if Telegram failed, so prices are not lost
+      - name: Save data
         if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: ebay_prices.json
-          key: ebay-prices-${{ github.run_id }}
+        working-directory: data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to save"
+          else
+            git commit --quiet -m "Prices $(date -u '+%Y-%m-%d %H:%M') UTC"
+            git push --quiet origin data
+          fi

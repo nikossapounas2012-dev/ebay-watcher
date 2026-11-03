@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.DS_Store
+ebay_prices.json
+ebay_history.csv
+card_names.json

@@ -1,2 +1,277 @@
-# One Cardmarket product URL per line. Lines starting with # are ignored.
-https://www.cardmarket.com/en/YuGiOh/Products/Singles/Beyond-the-Brave/Ars-Magna-the-Finite-and-the-Infinite-V1-Ultra-Rare
+# One printing per line:  Card name | Set code | Rarity | original/25th (optional)
+#   - a listing counts if its title has the set code (MRD-138, MRD-E138 and MRD-EN138 all count)
+#     and the rarity; the card name in the title is not checked (sellers often get it wrong)
+#   - 'original' skips 25th/20th Anniversary reprints that reuse the same code, '25th' only counts them
+#   - a line with just a card name watches the cheapest copy of any printing
+# Rarities: Secret Rare, Ultra Rare, Ultimate Rare, Ghost Rare, Ghost/Gold Rare
+# The number in Telegram is the line's position (from 1) - add new lines at the END to keep numbers.
+# Generated from YGOPRODeck: every English Secret/Ultra/Ultimate/Ghost printing, oldest set first.
+# No English Secret/Ultra/Ultimate/Ghost printing exists for: Magical Merchant, Tribe-Infecting Virus,
+#   Exiled Force, Sakuretsu Armor, Giant Trunade, Solidarity, Royal Oppression, Consecrated Light
+
+[My cards]
+Ars Magna the Finite and the Infinite | BETB-EN018 | Ultra Rare
+
+[Both formats]
+Heavy Storm | LCYW-EN061 | Ultra Rare
+Heavy Storm | LCJW-EN284 | Ultra Rare
+Mirror Force | MRD-EN138 | Ultra Rare | original
+Mirror Force | MRD-EN138 | Ultra Rare | 25th
+Mirror Force | DPYG-EN027 | Ultra Rare
+Mirror Force | LCYW-EN091 | Secret Rare
+Mirror Force | LCJW-EN130 | Secret Rare
+Mirror Force | YGLD-ENB33 | Ultra Rare
+Mirror Force | DUSA-EN048 | Ultra Rare
+Mirror Force | LCKC-EN053 | Ultra Rare
+Trap Dustshoot | RA05-EN077 | Ultimate Rare
+Trap Dustshoot | RA05-EN077 | Secret Rare
+Trap Dustshoot | RA05-EN077 | Ultra Rare
+Mystical Space Typhoon | SRL-047 | Ultra Rare | original
+Mystical Space Typhoon | SRL-047 | Ultra Rare | 25th
+Mystical Space Typhoon | GLD5-EN038 | Ghost/Gold Rare
+Mystical Space Typhoon | LCYW-EN062 | Secret Rare
+Mystical Space Typhoon | LCJW-EN285 | Secret Rare
+Mystical Space Typhoon | AP08-EN002 | Ultimate Rare
+Mystical Space Typhoon | DUOV-EN086 | Ultra Rare
+Mystical Space Typhoon | RA02-EN048 | Ultimate Rare
+Mystical Space Typhoon | RA02-EN048 | Secret Rare
+Mystical Space Typhoon | RA02-EN048 | Ultra Rare
+Mystical Space Typhoon | RA05-EN112 | Ultra Rare
+Book of Moon | TU07-EN001 | Ultra Rare
+Book of Moon | LCYW-EN270 | Secret Rare
+Book of Moon | LCJW-EN288 | Secret Rare
+Book of Moon | OP13-EN001 | Ultimate Rare
+Book of Moon | BLAR-EN052 | Ultra Rare
+Book of Moon | SGX1-ENI15 | Secret Rare
+Book of Moon | RA02-EN050 | Ultimate Rare
+Book of Moon | RA02-EN050 | Secret Rare
+Book of Moon | RA02-EN050 | Ultra Rare
+Torrential Tribute | LON-EN025 | Ultra Rare
+Torrential Tribute | DB1-EN228 | Ultra Rare
+Torrential Tribute | LCYW-EN180 | Secret Rare
+Torrential Tribute | LCJW-EN294 | Secret Rare
+Torrential Tribute | BLRR-EN047 | Ultra Rare
+Call of the Haunted | PSV-EN012 | Ultra Rare | original
+Call of the Haunted | PSV-EN012 | Ultra Rare | 25th
+Call of the Haunted | LART-EN009 | Ultra Rare
+Call of the Haunted | RA05-EN076 | Ultimate Rare
+Call of the Haunted | RA05-EN076 | Secret Rare
+Call of the Haunted | RA05-EN076 | Ultra Rare
+
+[Goat format]
+Black Luster Soldier - Envoy of the Beginning | IOC-EN025 | Ultra Rare
+Black Luster Soldier - Envoy of the Beginning | MC2-EN004 | Secret Rare
+Black Luster Soldier - Envoy of the Beginning | DR2-EN025 | Ultra Rare
+Black Luster Soldier - Envoy of the Beginning | LCYW-EN025 | Secret Rare
+Black Luster Soldier - Envoy of the Beginning | DUSA-EN053 | Ultra Rare
+Black Luster Soldier - Envoy of the Beginning | MAMA-EN047 | Ultra Rare
+Chaos Sorcerer | TU02-EN001 | Ultra Rare
+Thousand-Eyes Restrict | PSV-EN084 | Ultra Rare | original
+Thousand-Eyes Restrict | PSV-EN084 | Ultra Rare | 25th
+Thousand-Eyes Restrict | DB1-EN195 | Ultra Rare
+Thousand-Eyes Restrict | MC1-EN004 | Secret Rare
+Thousand-Eyes Restrict | RP02-EN021 | Ultra Rare
+Metamorphosis | MP25-EN299 | Ultra Rare
+Tsukuyomi | AP01-EN001 | Ultimate Rare
+Tsukuyomi | DUSA-EN052 | Ultra Rare
+Magician of Faith | DUSA-EN044 | Ultra Rare
+Magician of Faith | SBAD-EN001 | Ultra Rare
+Sangan | TU06-EN001 | Ultra Rare
+Sangan | LCYW-EN120 | Secret Rare
+Sangan | LDS3-EN001 | Ultra Rare
+Breaker the Magical Warrior | MFC-071 | Ultra Rare
+Breaker the Magical Warrior | DR1-EN126 | Ultra Rare
+Breaker the Magical Warrior | MC2-EN002 | Secret Rare
+Breaker the Magical Warrior | LCYW-EN023 | Ultra Rare
+Breaker the Magical Warrior | SBCB-EN008 | Secret Rare
+D.D. Warrior Lady | DUSA-EN051 | Ultra Rare
+D.D. Warrior Lady | SGX1-ENE04 | Secret Rare
+Airknight Parshath | LOD-EN062 | Ultra Rare
+Airknight Parshath | SBCB-EN132 | Secret Rare
+Jinzo | PSV-EN000 | Secret Rare | original
+Jinzo | PSV-EN000 | Secret Rare | 25th
+Jinzo | BPT-011 | Secret Rare
+Jinzo | DB1-EN067 | Ultra Rare
+Jinzo | YAP1-EN007 | Ultra Rare
+Jinzo | RP02-EN001 | Ultra Rare
+Jinzo | DUSA-EN045 | Ultra Rare
+Jinzo | OPTP-EN002 | Ultra Rare
+Jinzo | SBCB-EN147 | Secret Rare
+Spirit Reaper | LCYW-EN246 | Ultra Rare
+Spirit Reaper | LCJW-EN190 | Ultra Rare
+Morphing Jar | TP2-001 | Ultra Rare
+Morphing Jar | LCYW-EN121 | Ultra Rare
+Graceful Charity | LCYW-EN064 | Secret Rare
+Pot of Greed | DPKB-EN029 | Ultimate Rare
+Pot of Greed | LCYW-EN059 | Secret Rare
+Pot of Greed | LCJW-EN061 | Secret Rare
+Delinquent Duo | SRL-039 | Ultra Rare | original
+Delinquent Duo | SRL-039 | Ultra Rare | 25th
+Delinquent Duo | LCKC-EN101 | Secret Rare
+Delinquent Duo | MAMO-EN093 | Ultra Rare
+Snatch Steal | SRL-036 | Ultra Rare | original
+Snatch Steal | SRL-036 | Ultra Rare | 25th
+Snatch Steal | DB1-EN021 | Ultra Rare
+Snatch Steal | BLTR-EN096 | Secret Rare
+Scapegoat | RP01-EN090 | Ultra Rare
+Scapegoat | LCJW-EN066 | Secret Rare
+Scapegoat | OP08-EN003 | Ultimate Rare
+Scapegoat | MAMA-EN077 | Ultra Rare
+Scapegoat | RA05-EN111 | Ultra Rare
+Nobleman of Crossout | SBCB-EN138 | Secret Rare
+Premature Burial | PSV-EN037 | Ultra Rare | original
+Premature Burial | PSV-EN037 | Ultra Rare | 25th
+Ring of Destruction | PGD-000 | Secret Rare
+Ring of Destruction | IOC-SE3 | Ultra Rare
+Ring of Destruction | RP02-EN066 | Secret Rare
+Ring of Destruction | DPKB-EN036 | Ultimate Rare
+Ring of Destruction | LCKC-EN050 | Ultra Rare
+Ring of Destruction | LART-EN007 | Ultra Rare
+Ring of Destruction | KC01-EN055 | Ultra Rare
+
+[Edison format]
+Brionac, Dragon of the Ice Barrier | HA01-EN022 | Secret Rare
+Brionac, Dragon of the Ice Barrier | DUSA-EN073 | Ultra Rare
+Brionac, Dragon of the Ice Barrier | DUDE-EN008 | Ultra Rare
+Black Rose Dragon | CT05-EN003 | Secret Rare
+Black Rose Dragon | CSOC-EN039 | Ghost Rare
+Black Rose Dragon | CSOC-EN039 | Ultimate Rare
+Black Rose Dragon | CSOC-EN039 | Ultra Rare
+Black Rose Dragon | LC05-EN004 | Ultra Rare
+Black Rose Dragon | DUSA-EN077 | Ultra Rare
+Black Rose Dragon | DUDE-EN010 | Ultra Rare
+Black Rose Dragon | LDS2-EN110 | Ultra Rare
+Black Rose Dragon | RA04-EN057 | Ultimate Rare
+Black Rose Dragon | RA04-EN057 | Secret Rare
+Black Rose Dragon | RA04-EN057 | Ultra Rare
+Black Rose Dragon | L5DD-ENS02 | Secret Rare
+Goyo Guardian | TDGS-EN042 | Ultimate Rare
+Goyo Guardian | TDGS-EN042 | Ultra Rare
+Goyo Guardian | CT05-ENS03 | Secret Rare
+Goyo Guardian | DUSA-EN075 | Ultra Rare
+Goyo Guardian | BLAR-EN057 | Ultra Rare
+Chimeratech Fortress Dragon | JUMP-EN031 | Ultra Rare
+Chimeratech Fortress Dragon | DUSA-EN065 | Ultra Rare
+Chimeratech Fortress Dragon | GFP2-EN123 | Ultra Rare
+Gladiator Beast Gyzarus | DUSA-EN071 | Ultra Rare
+Judgment Dragon | LODT-EN026 | Secret Rare
+Judgment Dragon | TU01-EN000 | Ultimate Rare
+Judgment Dragon | DUSA-EN070 | Ultra Rare
+Judgment Dragon | BLLR-EN041 | Ultra Rare
+Judgment Dragon | BLC1-EN012 | Ultra Rare
+Dark Armed Dragon | PTDN-EN019 | Secret Rare
+Dark Armed Dragon | TU06-EN000 | Ultimate Rare
+Dark Armed Dragon | DUSA-EN067 | Ultra Rare
+Dark Armed Dragon | LCKC-EN068 | Secret Rare
+Dark Armed Dragon | GFP2-EN179 | Ghost Rare
+Dark Armed Dragon | GTP2-EN178 | Ghost Rare
+Dark Armed Dragon | BLMR-EN054 | Ultra Rare
+Gorz the Emissary of Darkness | DLG1-EN000 | Secret Rare
+Gorz the Emissary of Darkness | RP02-EN000 | Secret Rare
+Gorz the Emissary of Darkness | YR01-EN003 | Ultra Rare
+Gorz the Emissary of Darkness | GLD5-EN024 | Ghost/Gold Rare
+Gorz the Emissary of Darkness | LCYW-EN044 | Ultra Rare
+Gorz the Emissary of Darkness | BLMM-EN005 | Secret Rare
+Tragoedia | JUMP-EN033 | Ultra Rare
+Tragoedia | TU04-EN000 | Ultimate Rare
+Honest | LODT-EN001 | Ghost Rare
+Honest | LODT-EN001 | Secret Rare
+Honest | TWED-EN001 | Ultra Rare
+Honest | DUSA-EN069 | Ultra Rare
+Honest | BLMM-EN006 | Secret Rare
+Cyber Dragon | CRV-EN015 | Ultimate Rare
+Cyber Dragon | CT03-EN002 | Secret Rare
+Cyber Dragon | DR04-EN015 | Ultra Rare
+Cyber Dragon | LCGX-EN176 | Secret Rare
+Cyber Dragon | LCGX-EN175 | Ultra Rare
+Cyber Dragon | RYMP-EN059 | Secret Rare
+Cyber Dragon | DUSA-EN057 | Ultra Rare
+Cyber Dragon | BLRR-EN048 | Ultra Rare
+Cyber Dragon | OP16-EN001 | Ultimate Rare
+Cyber Dragon | SGX1-ENG01 | Secret Rare
+Cyber Dragon | GFP2-EN178 | Ghost Rare
+Cyber Dragon | SGX3-ENI28 | Secret Rare
+Cyber Dragon | BLC1-EN020 | Ultra Rare
+Cyber Dragon | BLC1-EN021 | Ultra Rare
+Card Trooper | DP03-EN009 | Ultra Rare
+Card Trooper | DLG1-EN107 | Ultra Rare
+Card Trooper | BLRR-EN053 | Secret Rare
+Dandylion | JUMP-EN029 | Ultra Rare
+Dandylion | LCGX-EN042 | Secret Rare
+Dandylion | AP04-EN001 | Ultimate Rare
+Dandylion | DUSA-EN059 | Ultra Rare
+Quickdraw Synchron | LC5D-EN013 | Ultra Rare
+Quickdraw Synchron | LDS3-EN117 | Ultra Rare
+Debris Dragon | AP01-EN002 | Ultimate Rare
+Debris Dragon | LC5D-EN009 | Secret Rare
+Ryko, Lightsworn Hunter | RA02-EN003 | Ultimate Rare
+Ryko, Lightsworn Hunter | RA02-EN003 | Secret Rare
+Ryko, Lightsworn Hunter | RA02-EN003 | Ultra Rare
+Plaguespreader Zombie | CSOC-EN031 | Ultimate Rare
+Plaguespreader Zombie | CSOC-EN031 | Ultra Rare
+Plaguespreader Zombie | DUSA-EN076 | Ultra Rare
+Necro Gardna | TAEV-EN012 | Ultimate Rare
+Necro Gardna | LCGX-EN027 | Secret Rare
+Necro Gardna | RYMP-EN009 | Secret Rare
+Blackwing - Gale the Whirlwind | LC5D-EN110 | Ultra Rare
+Blackwing - Gale the Whirlwind | DUSA-EN078 | Ultra Rare
+Blackwing - Gale the Whirlwind | BLCR-EN056 | Ultra Rare
+Blackwing Armor Master | CRMS-EN041 | Ultimate Rare
+Blackwing Armor Master | CRMS-EN041 | Ultra Rare
+Blackwing Armor Master | LC5D-EN132 | Secret Rare
+Blackwing Armor Master | L5DD-ENC27 | Ultra Rare
+Machina Fortress | SDMM-EN001 | Ultra Rare
+Upstart Goblin | LCYW-EN265 | Ultra Rare
+Pot of Avarice | EEN-EN037 | Ultimate Rare
+Pot of Avarice | DR04-EN097 | Ultra Rare
+Pot of Avarice | LCJW-EN290 | Secret Rare
+Pot of Avarice | RA05-EN114 | Ultra Rare
+Foolish Burial | LCJW-EN070 | Secret Rare
+Foolish Burial | BLHR-EN057 | Ultra Rare
+Foolish Burial | LART-EN016 | Ultra Rare
+Foolish Burial | SBCB-EN139 | Secret Rare
+Foolish Burial | RA02-EN049 | Ultimate Rare
+Foolish Burial | RA02-EN049 | Secret Rare
+Foolish Burial | RA02-EN049 | Ultra Rare
+Foolish Burial | CH01-EN031 | Ultra Rare
+Foolish Burial | RA05-EN138 | Ultra Rare
+Charge of the Light Brigade | TDGS-EN089 | Secret Rare
+Charge of the Light Brigade | RA02-EN055 | Ultimate Rare
+Charge of the Light Brigade | RA02-EN055 | Secret Rare
+Charge of the Light Brigade | RA02-EN055 | Ultra Rare
+Mind Control | LCYW-EN176 | Ultra Rare
+Mind Control | DUDE-EN038 | Ultra Rare
+Mind Control | RA02-EN046 | Ultimate Rare
+Mind Control | RA02-EN046 | Secret Rare
+Mind Control | RA02-EN046 | Ultra Rare
+Brain Control | TLM-EN038 | Ultimate Rare
+Brain Control | LCYW-EN074 | Secret Rare
+Brain Control | DUSA-EN046 | Ultra Rare
+Solemn Judgment | MRD-EN127 | Ultra Rare | original
+Solemn Judgment | MRD-EN127 | Ultra Rare | 25th
+Solemn Judgment | GLD5-EN045 | Ghost/Gold Rare
+Solemn Judgment | LCYW-EN152 | Secret Rare
+Solemn Judgment | LCJW-EN182 | Secret Rare
+Solemn Judgment | BLRR-EN100 | Ultra Rare
+Solemn Judgment | OP12-EN003 | Ultimate Rare
+Solemn Judgment | LART-EN014 | Ultra Rare
+Solemn Judgment | RA02-EN075 | Ultimate Rare
+Solemn Judgment | RA02-EN075 | Secret Rare
+Solemn Judgment | RA02-EN075 | Ultra Rare
+Solemn Judgment | RA05-EN124 | Ultra Rare
+Starlight Road | DPCT-EN004 | Secret Rare
+Starlight Road | LC5D-EN056 | Ultra Rare
+Starlight Road | BROL-EN072 | Ultra Rare
+Compulsory Evacuation Device | LCYW-EN291 | Secret Rare
+Compulsory Evacuation Device | LCJW-EN295 | Secret Rare
+Compulsory Evacuation Device | DUOV-EN097 | Ultra Rare
+Compulsory Evacuation Device | RA01-EN069 | Ultimate Rare
+Compulsory Evacuation Device | RA01-EN069 | Secret Rare
+Compulsory Evacuation Device | RA01-EN069 | Ultra Rare
+Compulsory Evacuation Device | RA05-EN125 | Ultra Rare
+Dimensional Prison | LCGX-EN220 | Ultra Rare
+Dimensional Prison | RYMP-EN084 | Ultra Rare
+Bottomless Trap Hole | LCYW-EN181 | Ultra Rare
+Bottomless Trap Hole | LCJW-EN078 | Secret Rare
+Bottomless Trap Hole | BLRR-EN101 | Ultra Rare
+Icarus Attack | L5DD-ENC23 | Ultra Rare
