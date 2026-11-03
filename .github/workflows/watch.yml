@@ -1,254 +1,45 @@
-"""
-eBay UK card price watcher (official eBay Browse API, no browser needed)
-- Reads search terms from ebay_cards.txt (one per line, # for comments)
-- Searches eBay UK for Buy It Now listings located in the United Kingdom
-- Records the cheapest total price (item + postage) and alerts when a lower one appears
+name: eBay price watch
 
-Setup:
-    1. Create a free account at https://developer.ebay.com
-    2. Create a *Production* keyset and copy the App ID (Client ID) and Cert ID (Client Secret)
-    3. Set them as environment variables:
-         export EBAY_CLIENT_ID="your-app-id"
-         export EBAY_CLIENT_SECRET="your-cert-id"
-    (optional) pip install plyer      # desktop notifications
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # every 30 minutes (UTC). GitHub often starts a few minutes late.
+  workflow_dispatch:          # adds a "Run workflow" button to run it by hand
 
-Optional Telegram alerts (set as environment variables):
-    TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
-    - a summary is sent after every pass (turn off with TELEGRAM_EVERY_RUN = False)
-    - price drops are always sent as a separate alert
+concurrency:
+  group: ebay-watch          # never run two checks at the same time
+  cancel-in-progress: false
 
-Run:
-    python ebay_watch.py            # loop forever
-    python ebay_watch.py --once     # single pass
-"""
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
 
-import argparse
-import base64
-import json
-import os
-import random
-import sys
-import time
-import urllib.error
-import urllib.parse
-import urllib.request
-from datetime import datetime
-from pathlib import Path
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-# ---------------- settings ----------------
-BASE_DIR = Path(__file__).resolve().parent   # files live next to this script, wherever it is run from
-CARDS_FILE = BASE_DIR / "ebay_cards.txt"
-STATE_FILE = BASE_DIR / "ebay_prices.json"
+      # bring back the last saved prices, so drops can be detected between runs
+      - name: Restore saved prices
+        uses: actions/cache/restore@v4
+        with:
+          path: ebay_prices.json
+          key: ebay-prices-${{ github.run_id }}
+          restore-keys: ebay-prices-
 
-MARKETPLACE = "EBAY_GB"
-ITEM_COUNTRY = "GB"              # only listings located in the UK
-BUY_IT_NOW_ONLY = True           # skip auctions (their current bid is not a real price)
-RESULTS_PER_SEARCH = 50
+      - name: Check prices
+        run: python ebay_watch.py --once
+        env:
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
-# listings whose title contains any of these words are ignored
-EXCLUDE_WORDS = ["japanese", "korean", "chinese", "asian", "ocg", "proxy", "orica", "custom",
-                 "replica", "fake", "psa", "bgs", "cgc", "graded", "empty", "bundle", "lot", "x3", "3x"]
-
-TELEGRAM_EVERY_RUN = True        # send a summary to Telegram after every pass (price drops are always sent)
-CHECK_INTERVAL_MIN = 30          # minutes between full passes
-DELAY_BETWEEN_CARDS = (2, 5)     # seconds, random range
-# ------------------------------------------
-
-TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token"
-SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search"
-_token = {"value": None, "expires": 0}
-
-
-def log(msg):
-    print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] {msg}", flush=True)
-
-
-def load_cards():
-    if not CARDS_FILE.exists():
-        sys.exit(f"{CARDS_FILE} not found")
-    queries = []
-    for line in CARDS_FILE.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if line and not line.startswith("#"):
-            queries.append(line)
-    return queries
-
-
-def load_state():
-    if STATE_FILE.exists():
-        return json.loads(STATE_FILE.read_text(encoding="utf-8"))
-    return {}
-
-
-def save_state(state):
-    STATE_FILE.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
-
-
-# ---------------- eBay API ----------------
-def get_token():
-    """Application token (client credentials). Valid ~2 hours, reused until it expires."""
-    if _token["value"] and time.time() < _token["expires"] - 60:
-        return _token["value"]
-
-    client_id = os.getenv("EBAY_CLIENT_ID")
-    client_secret = os.getenv("EBAY_CLIENT_SECRET")
-    if not client_id or not client_secret:
-        sys.exit("Set EBAY_CLIENT_ID and EBAY_CLIENT_SECRET first (see the setup notes at the top)")
-
-    auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
-    data = urllib.parse.urlencode({
-        "grant_type": "client_credentials",
-        "scope": "https://api.ebay.com/oauth/api_scope",
-    }).encode()
-    req = urllib.request.Request(TOKEN_URL, data=data, headers={
-        "Authorization": f"Basic {auth}",
-        "Content-Type": "application/x-www-form-urlencoded",
-    })
-    with urllib.request.urlopen(req, timeout=20) as r:
-        body = json.load(r)
-    _token["value"] = body["access_token"]
-    _token["expires"] = time.time() + body.get("expires_in", 7200)
-    return _token["value"]
-
-
-def search(query):
-    filters = [f"itemLocationCountry:{ITEM_COUNTRY}", "priceCurrency:GBP"]
-    if BUY_IT_NOW_ONLY:
-        filters.append("buyingOptions:{FIXED_PRICE}")
-    params = {
-        "q": query,
-        "filter": ",".join(filters),
-        "sort": "price",          # cheapest first
-        "limit": RESULTS_PER_SEARCH,
-    }
-    req = urllib.request.Request(f"{SEARCH_URL}?{urllib.parse.urlencode(params)}", headers={
-        "Authorization": f"Bearer {get_token()}",
-        "X-EBAY-C-MARKETPLACE-ID": MARKETPLACE,
-    })
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.load(r).get("itemSummaries", [])
-
-
-def shipping_cost(item):
-    options = item.get("shippingOptions") or []
-    if not options:
-        return None   # unknown (often "collection only" or calculated postage)
-    cost = options[0].get("shippingCost")
-    return float(cost["value"]) if cost else 0.0
-
-
-def cheapest_listing(query):
-    best = None
-    for item in search(query):
-        title = item.get("title", "")
-        if any(word in title.lower() for word in EXCLUDE_WORDS):
-            continue
-        price = item.get("price") or {}
-        if price.get("currency") != "GBP":
-            continue
-        postage = shipping_cost(item)
-        total = float(price["value"]) + (postage or 0.0)
-        if best is None or total < best["price"]:
-            best = {
-                "price": round(total, 2),
-                "item": float(price["value"]),
-                "postage": postage,
-                "title": title,
-                "condition": item.get("condition", ""),
-                "seller": (item.get("seller") or {}).get("username", ""),
-                "url": item.get("itemWebUrl", ""),
-            }
-    return best
-
-
-# ---------------- alerts ----------------
-def send_telegram(text):
-    token, chat = os.getenv(""), os.getenv("TELEGRAM_CHAT_ID")
-    if not (token and chat):
-        return
-    try:
-        data = urllib.parse.urlencode({"chat_id": chat, "text": text,
-                                       "disable_web_page_preview": "true"}).encode()
-        urllib.request.urlopen(f"https://api.telegram.org/bot{token}/sendMessage", data, timeout=15)
-    except urllib.error.HTTPError as e:
-        log(f"Telegram failed: {e.code} — {e.read().decode(errors='ignore')[:200]}")
-    except Exception as e:
-        log(f"Telegram failed: {e}")
-
-
-def notify(title, body):
-    log(f"ALERT: {title} — {body}")
-    send_telegram(f"🔻 {title}\n{body}")
-    try:
-        from plyer import notification
-        notification.notify(title=title, message=body[:250], timeout=10)
-    except Exception:
-        pass
-
-
-def describe(offer):
-    postage = "postage unknown" if offer["postage"] is None else f"incl. £{offer['postage']:.2f} postage"
-    return f"£{offer['price']:.2f} ({postage}) — {offer['title']} [{offer['seller']}]"
-
-
-# ---------------- main loop ----------------
-def run_pass(state):
-    summary = []   # one line per card, sent to Telegram at the end of the pass
-    for query in load_cards():
-        try:
-            offer = cheapest_listing(query)
-        except urllib.error.HTTPError as e:
-            log(f"{query}: eBay error {e.code} — {e.read().decode(errors='ignore')[:300]}")
-            summary.append(f"⚠️ {query}: eBay error {e.code}")
-            continue
-        except Exception as e:
-            log(f"{query}: error — {e}")
-            summary.append(f"⚠️ {query}: error")
-            continue
-
-        prev = state.get(query)
-        if offer is None:
-            log(f"{query}: no UK Buy It Now listings")
-            summary.append(f"– {query}: no UK Buy It Now listings")
-        else:
-            if prev is None:
-                log(f"{query}: baseline {describe(offer)}")
-                change = "new"
-            elif offer["price"] < prev["price"]:
-                notify(f"Lower price: {query}",
-                       f"{describe(offer)} — was £{prev['price']:.2f}\n{offer['url']}")
-                change = f"🔻 was £{prev['price']:.2f}"
-            elif offer["price"] > prev["price"]:
-                log(f"{query}: {describe(offer)}")
-                change = f"🔺 was £{prev['price']:.2f}"
-            else:
-                log(f"{query}: {describe(offer)}")
-                change = "no change"
-            summary.append(f"• {query}: £{offer['price']:.2f} ({change})\n  {offer['url']}")
-            offer["checked"] = datetime.now().isoformat(timespec="seconds")
-            state[query] = offer
-            save_state(state)
-
-        time.sleep(random.uniform(*DELAY_BETWEEN_CARDS))
-
-    if TELEGRAM_EVERY_RUN and summary:
-        send_telegram(f"eBay check {datetime.now():%d %b %H:%M}\n\n" + "\n".join(summary))
-
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--once", action="store_true", help="run one pass and exit")
-    args = ap.parse_args()
-
-    state = load_state()
-    while True:
-        run_pass(state)
-        if args.once:
-            break
-        wait = CHECK_INTERVAL_MIN * 60 + random.uniform(0, 120)
-        log(f"next pass in {wait/60:.0f} min")
-        time.sleep(wait)
-
-
-if __name__ == "__main__":
-    main()
+      # save the new prices for the next run
+      - name: Save prices
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ebay_prices.json
+          key: ebay-prices-${{ github.run_id }}
