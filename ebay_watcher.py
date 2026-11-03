@@ -163,7 +163,7 @@ def cheapest_listing(query):
 
 # ---------------- alerts ----------------
 def send_telegram(text):
-    token, chat = os.getenv("TELEGRAM_TOKEN"), os.getenv("TELEGRAM_CHAT_ID")
+    token, chat = os.getenv("9193882667:AAEd5HXioiKeHPLuvNXH01MoTmer7J0F_k0"), os.getenv("9026980311")
     if not (token and chat):
         return
     try:
