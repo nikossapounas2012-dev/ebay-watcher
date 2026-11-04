@@ -67,6 +67,7 @@ EXCLUDE_WORDS = {"japanese", "korean", "chinese", "asian", "ocg", "proxy", "oric
 BOX_EXCLUDE_WORDS = {
     "case", "cases", "opened", "unsealed", "resealed", "used", "omega", "jumpstart", "prerelease",
     "draft", "commander", "deck", "decks", "starter", "sample", "topper", "x2", "2x", "x4", "4x",
+    "damage", "damaged", "dented", "crushed", "torn",
     # English only
     "german", "deutsch", "french", "francais", "italian", "italiano", "spanish", "espanol",
     "portuguese", "russian", "japanese", "japan", "jp", "jpn", "chinese", "korean",
@@ -386,6 +387,22 @@ def box_listing_matches(title, entry):
     return bool(wanted & words) and not others & words
 
 
+def why_not_box(title, entry):
+    """Dry-run help: the reason a title is skipped, or '' if it counts."""
+    words, text = set(words_of(title)), " ".join(words_of(title))
+    bad = (EXCLUDE_WORDS | BOX_EXCLUDE_WORDS) & words
+    if bad:
+        return "word: " + ", ".join(sorted(bad))
+    phrase = next((p for p in BOX_EXCLUDE_PHRASES if p in text), None)
+    if phrase:
+        return "phrase: " + phrase
+    if not any(contains_phrase(words_of(title), words_of(n)) for n in entry["ebay_names"]):
+        return "no set name"
+    if not {"box", "display"} & words:
+        return "no box/display"
+    return "" if box_listing_matches(title, entry) else "wrong box type"
+
+
 def cheapest_box(entry):
     """MTG boxes: one search per eBay name, any category, sealed (New) only, above the pack price."""
     type_query = "play" if entry["box"] == "play" else "(collector, collectors)"
@@ -652,6 +669,16 @@ def main():
             for entry, (offer, error) in zip(entries, pool.map(fetch_offer, entries)):
                 result = error or (describe(offer) + f"\n      {offer['url']}" if offer else "no listing")
                 print(f"{entry['num']:>4}. {entry['label']}: {result}", flush=True)
+                if entry["kind"] == "box" and not offer and not error:
+                    # show what eBay returned without the condition filter, and why each was skipped
+                    type_query = "play" if entry["box"] == "play" else "(collector, collectors)"
+                    for new_only in (True, False):
+                        items = search(f"{entry['ebay_names'][-1]} {type_query} booster", category=None,
+                                       min_price=BOX_MIN_PRICE[entry["box"]], new_only=new_only)
+                        print(f"      {len(items)} results{' (New only)' if new_only else ' (any condition)'}")
+                        for item in items[:8]:
+                            print(f"        £{item.get('price', {}).get('value')} [{item.get('condition')}] "
+                                  f"{why_not_box(item.get('title', ''), entry) or 'OK'} | {item.get('title')}")
         return
 
     state = load_state()
