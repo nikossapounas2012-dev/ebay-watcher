@@ -89,7 +89,10 @@ SORCERY_MAX_RESULTS = 3000           # per query (15 pages of 200)
 SORCERY_SET_WORDS = {"Alpha": {"alpha"}, "Beta": {"beta"}, "Arthurian Legends": {"arthurian"},
                      "Gothic": {"gothic"}, "Dragonlord": {"dragonlord"}}
 SORCERY_EXCLUDE_WORDS = {"playset", "x2", "2x", "x3", "3x", "x4", "4x", "deck", "decks", "precon",
-                         "booster", "box", "pack", "packs", "bulk", "collection", "joblot"}
+                         "booster", "box", "pack", "packs", "bulk", "collection", "joblot",
+                         "book", "paperback", "hardcover", "novel", "grimoire"}
+# a Sorcery card title says one of these (books and games also use the word "sorcery")
+SORCERY_GAME_WORDS = {"contested", "realm", "tcg", "gothic", "arthurian", "dragonlord"}
 SORCERY_CARDS_URL = "https://api.sorcerytcg.com/api/cards"
 SORCERY_NAMES_FILE = DATA_DIR / "sorcery_names.json"   # every card name, to skip longer names
 
@@ -489,6 +492,8 @@ def sorcery_matches(title, entry, longer):
     found = set(words)
     extra = found - set(words_of(entry["name"]))      # a card may be called "... Box"
     if (EXCLUDE_WORDS | SORCERY_EXCLUDE_WORDS) & extra or "sorcery" not in found:
+        return False
+    if not SORCERY_GAME_WORDS & found:
         return False
     if not contains_phrase(words, words_of(entry["name"])):
         return False
