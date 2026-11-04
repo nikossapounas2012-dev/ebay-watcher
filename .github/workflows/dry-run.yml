@@ -1,0 +1,32 @@
+name: Dry run
+
+# Searches eBay and prints the cheapest match for each line of ebay_cards.txt / mtg_boxes.txt.
+# Saves nothing and sends nothing - use it to check a new list before the real checks pick it up.
+
+on:
+  workflow_dispatch:
+    inputs:
+      what:
+        description: "Which list to search"
+        type: choice
+        options: [boxes, cards, all]
+        default: boxes
+
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Search eBay
+        run: python ebay_watch.py --dry-run "$WHAT"
+        env:
+          WHAT: ${{ inputs.what }}
+          DATA_DIR: dry-run-data
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
