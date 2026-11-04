@@ -1,4 +1,10 @@
 {
  "cardmarket": "Wed, 04 Nov 2026 01:47:58 GMT",
- "tcgplayer": "2026-11-03T20:06:12+0000"
+ "tcgplayer": "2026-11-03T20:06:12+0000",
+ "rates": {
+  "EUR": 0.83358,
+  "USD": 1.1179
+ },
+ "tcgplayer_mtg": "2026-11-03T20:06:12+0000",
+ "cardmarket_mtg": "Wed, 04 Nov 2026 01:47:37 GMT"
 }
