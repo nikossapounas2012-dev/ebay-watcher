@@ -2,6 +2,7 @@
 eBay UK card price watcher (official eBay Browse API, no browser needed)
 - Reads card names from ebay_cards.txt (one per line, # for comments, [Section] headers)
   and Magic: The Gathering booster boxes from mtg_boxes.txt (Telegram numbers B1, B2...)
+  and Sorcery: Contested Realm Unique cards from sorcery_uniques.txt (Telegram numbers S1, S2...)
 - Searches eBay UK for Buy It Now Yu-Gi-Oh! singles located in the United Kingdom
 - Only counts listings whose title contains the exact card name
 - Records the cheapest total price (item + postage), keeps a history of every change,
@@ -28,6 +29,7 @@ Run:
 
 import argparse
 import base64
+import unicodedata
 import csv
 import json
 import os
@@ -46,6 +48,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent   # files live next to this script, wherever it is run from
 CARDS_FILE = BASE_DIR / "ebay_cards.txt"
 BOXES_FILE = BASE_DIR / "mtg_boxes.txt"
+SORCERY_FILE = BASE_DIR / "sorcery_uniques.txt"
 # saved prices + history go in DATA_DIR (GitHub Actions points this at the "data" branch folder)
 DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR))
 STATE_FILE = DATA_DIR / "ebay_prices.json"
@@ -76,6 +79,19 @@ BOX_EXCLUDE_PHRASES = ["no packs", "set booster", "collector booster pack", "pla
 BOX_TYPE_WORDS = {"play": {"play"}, "collector": {"collector", "collectors"}}
 # a "box" cheaper than this is a single pack or a scam - also passed to eBay as a price filter
 BOX_MIN_PRICE = {"play": 50, "collector": 120}
+
+# ---- Sorcery: Contested Realm Uniques (sorcery_uniques.txt) ----
+# Sorcery has few UK listings, so instead of one search per card, these broad searches are read
+# page by page (~20 eBay calls per check) and every listing is matched to the card lines.
+SORCERY_QUERIES = ["sorcery contested realm", "sorcery tcg", "sorcery gothic", "sorcery arthurian",
+                   "sorcery dragonlord"]
+SORCERY_MAX_RESULTS = 3000           # per query (15 pages of 200)
+SORCERY_SET_WORDS = {"Alpha": {"alpha"}, "Beta": {"beta"}, "Arthurian Legends": {"arthurian"},
+                     "Gothic": {"gothic"}, "Dragonlord": {"dragonlord"}}
+SORCERY_EXCLUDE_WORDS = {"playset", "x2", "2x", "x3", "3x", "x4", "4x", "deck", "decks", "precon",
+                         "booster", "box", "pack", "packs", "bulk", "collection", "joblot"}
+SORCERY_CARDS_URL = "https://api.sorcerytcg.com/api/cards"
+SORCERY_NAMES_FILE = DATA_DIR / "sorcery_names.json"   # every card name, to skip longer names
 
 # "25th Anniversary Edition" reprints reuse the original set code (e.g. MRD-EN138, PSV-EN000).
 # A 4th column in ebay_cards.txt keeps them apart: "original" skips titles with these words,
@@ -176,8 +192,30 @@ def load_boxes():
     return boxes
 
 
+def load_sorcery():
+    """Sorcery Uniques: "Card name | Set | Standard or Foil"."""
+    if not SORCERY_FILE.exists():
+        return []
+    entries, section = [], ""
+    for line in SORCERY_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            section = line[1:-1].strip()
+            continue
+        parts = [p.strip() for p in line.split("|")] + ["", ""]
+        name, set_name, finish = parts[0], parts[1], parts[2].lower()
+        if set_name not in SORCERY_SET_WORDS or finish not in ("standard", "foil"):
+            sys.exit(f"Check this line in {SORCERY_FILE.name}: {line}  (set: {', '.join(SORCERY_SET_WORDS)}; Standard or Foil)")
+        entries.append({"kind": "sorcery", "num": f"S{len(entries) + 1}", "section": section, "name": name,
+                        "set": set_name, "foil": finish == "foil", "code": "", "rarity": "", "edition": "",
+                        "key": line, "label": f"{name} ({set_name}{', foil' if finish == 'foil' else ''})"})
+    return entries
+
+
 def load_all():
-    return load_cards() + load_boxes()
+    return load_cards() + load_boxes() + load_sorcery()
 
 
 # ---------------- set codes ----------------
@@ -254,6 +292,7 @@ def add_history(name, offer, prev):
 # ---------------- title matching ----------------
 def words_of(text):
     """Lower-case words, with '.' and apostrophes removed so 'D.D.' -> 'dd' and "Gravekeeper's" -> 'gravekeepers'."""
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()   # "á" -> "a"
     return re.findall(r"[a-z0-9]+", re.sub(r"[.'’]", "", text.lower()))
 
 
@@ -324,7 +363,7 @@ def get_token():
     return _token["value"]
 
 
-def search(query, category=CATEGORY_ID, min_price=None, new_only=False):
+def search(query, category=CATEGORY_ID, min_price=None, new_only=False, offset=0, with_total=False):
     filters = [f"itemLocationCountry:{ITEM_COUNTRY}", "priceCurrency:GBP"]
     if BUY_IT_NOW_ONLY:
         filters.append("buyingOptions:{FIXED_PRICE}")
@@ -337,6 +376,7 @@ def search(query, category=CATEGORY_ID, min_price=None, new_only=False):
         "filter": ",".join(filters),
         "sort": "price",          # cheapest first
         "limit": RESULTS_PER_SEARCH,
+        "offset": offset,
     }
     if category:
         params["category_ids"] = category
@@ -345,7 +385,9 @@ def search(query, category=CATEGORY_ID, min_price=None, new_only=False):
         "X-EBAY-C-MARKETPLACE-ID": MARKETPLACE,
     })
     with urllib.request.urlopen(req, timeout=30) as r:
-        return json.load(r).get("itemSummaries", [])
+        body = json.load(r)
+    items = body.get("itemSummaries", [])
+    return (items, body.get("total", 0)) if with_total else items
 
 
 def shipping_cost(item):
@@ -414,6 +456,82 @@ def cheapest_box(entry):
                 seen.add(item.get("itemId"))
                 items.append(item)
     return cheapest_of(items, lambda title: box_listing_matches(title, entry))
+
+
+def sorcery_names():
+    """Every Sorcery card name (any rarity), cached for a week - used to skip longer names."""
+    if SORCERY_NAMES_FILE.exists() and time.time() - SORCERY_NAMES_FILE.stat().st_mtime < 7 * 86400:
+        return json.loads(SORCERY_NAMES_FILE.read_text(encoding="utf-8"))
+    try:
+        req = urllib.request.Request(SORCERY_CARDS_URL, headers={"User-Agent": "ebay-card-watcher/1.0"})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            names = sorted({card["name"] for card in json.load(r)})
+    except Exception as e:
+        if SORCERY_NAMES_FILE.exists():
+            return json.loads(SORCERY_NAMES_FILE.read_text(encoding="utf-8"))
+        log(f"Sorcery card names not loaded ({e}) - longer names are not skipped")
+        return []
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    SORCERY_NAMES_FILE.write_text(json.dumps(names, ensure_ascii=False), encoding="utf-8")
+    return names
+
+
+def title_is_foil(words):
+    """'Foil' -> True; 'Non-Foil', 'Nonfoil', 'Non Foil', 'not foil', 'Regular' -> False."""
+    text = " ".join(words)
+    if "nonfoil" in words or re.search(r"\b(non|no|not) foil", text):
+        return False
+    return "foil" in words or "foils" in words
+
+
+def sorcery_matches(title, entry, longer):
+    words = words_of(title)
+    found = set(words)
+    extra = found - set(words_of(entry["name"]))      # a card may be called "... Box"
+    if (EXCLUDE_WORDS | SORCERY_EXCLUDE_WORDS) & extra or "sorcery" not in found:
+        return False
+    if not contains_phrase(words, words_of(entry["name"])):
+        return False
+    if any(contains_phrase(words, words_of(other)) for other in longer):
+        return False
+    other_sets = set().union(*(w for s, w in SORCERY_SET_WORDS.items() if s != entry["set"]))
+    if other_sets & found and not SORCERY_SET_WORDS[entry["set"]] & found:
+        return False   # names a different set (Alpha, Beta...)
+    return title_is_foil(words) == entry["foil"]
+
+
+def sorcery_results(entries):
+    """(offer, error) for each Sorcery line, from one shared set of searches."""
+    if not entries:
+        return []
+    try:
+        items, seen = [], set()
+        for query in SORCERY_QUERIES:
+            offset = 0
+            while offset < SORCERY_MAX_RESULTS:
+                page, total = search(query, category=None, min_price=1, offset=offset, with_total=True)
+                for item in page:
+                    if item.get("itemId") not in seen:
+                        seen.add(item.get("itemId"))
+                        items.append(item)
+                offset += RESULTS_PER_SEARCH
+                if not page or offset >= total:
+                    break
+        log(f"Sorcery: {len(items)} UK listings read")
+    except urllib.error.HTTPError as e:
+        log(f"Sorcery: eBay error {e.code} — {e.read().decode(errors='ignore')[:300]}")
+        return [(None, f"eBay error {e.code}")] * len(entries)
+    except Exception as e:
+        log(f"Sorcery: error — {e}")
+        return [(None, "error")] * len(entries)
+
+    names = sorcery_names()
+    results = []
+    for entry in entries:
+        own = words_of(entry["name"])
+        longer = [n for n in names if words_of(n) != own and contains_phrase(words_of(n), own)]
+        results.append((cheapest_of(items, lambda title: sorcery_matches(title, entry, longer)), None))
+    return results
 
 
 def cheapest_listing(entry):
@@ -517,10 +635,11 @@ def answer_replies(state):
             send_list(cards, state, text[4:].strip())
             log(f"Answered reply: {text}")
             continue
-        numbers = [n.upper() for n in re.findall(r"\b[bB]?\d+\b", text)]
+        numbers = [n.upper() for n in re.findall(r"\b[bBsS]?\d+\b", text)]
         if not numbers:
-            send_telegram("Reply with a number (e.g. 12, or 3 7 15, or B4 for a booster box) to get the eBay link.\n"
-                          "Reply 'list' for everything, 'list cards', 'list boxes', or e.g. 'list goat' for one section.")
+            send_telegram("Reply with a number (e.g. 12, or 3 7 15, B4 for a booster box, S20 for a Sorcery Unique) "
+                          "to get the eBay link.\nReply 'list' for everything, 'list cards', 'list boxes', "
+                          "'list sorcery', or e.g. 'list goat' for one section.")
             continue
         lines = []
         for n in numbers[:10]:
@@ -549,7 +668,8 @@ def send_list(cards, state, section_filter=""):
     """Full numbered list with the latest prices, optionally only sections containing the filter word."""
     lines, section_shown = [], None
     word = section_filter.lower()
-    kinds = {"cards": "card", "card": "card", "yugioh": "card", "boxes": "box", "box": "box", "mtg": "box"}
+    kinds = {"cards": "card", "card": "card", "yugioh": "card", "boxes": "box", "box": "box", "mtg": "box",
+             "sorcery": "sorcery", "uniques": "sorcery"}
     for entry in cards:
         if word in kinds:
             if entry["kind"] != kinds[word]:
@@ -593,8 +713,12 @@ def run_pass(state):
     for entry in cards:         # fill the card-name cache first (one file, so not in parallel)
         if entry["kind"] == "card" and not entry["code"]:
             longer_names(entry["name"])
+    single = [c for c in cards if c["kind"] != "sorcery"]
     with ThreadPoolExecutor(max_workers=PARALLEL_SEARCHES) as pool:
-        results = list(pool.map(fetch_offer, cards))
+        by_key = dict(zip((c["key"] for c in single), pool.map(fetch_offer, single)))
+    sorcery = [c for c in cards if c["kind"] == "sorcery"]
+    by_key.update(zip((c["key"] for c in sorcery), sorcery_results(sorcery)))
+    results = [by_key[c["key"]] for c in cards]
 
     drops, rises, new, gone, errors = [], [], [], [], []
     found = 0
@@ -638,7 +762,7 @@ def run_pass(state):
         else:
             lines.append(f"\n{title}")
             lines.extend(items)
-    header = f"eBay check {datetime.now():%d %b %H:%M} — {found} of {len(cards)} cards and boxes listed\n"
+    header = f"eBay check {datetime.now():%d %b %H:%M} — {found} of {len(cards)} listed\n"
     if not lines:
         lines.append("\nNo price changes.")
     lines.append("\nReply a number for the link, or 'list' for all prices.")
@@ -649,7 +773,8 @@ def run_pass(state):
         try:
             import references
             references.update([c for c in cards if c["kind"] == "card"], DATA_DIR, CARDMARKET_IDS_FILE, log,
-                              boxes=[c for c in cards if c["kind"] == "box"])
+                              boxes=[c for c in cards if c["kind"] == "box"],
+                              sorcery=[c for c in cards if c["kind"] == "sorcery"])
         except Exception as e:     # reference prices are extra - never stop the eBay check
             log(f"references: failed - {e}")
 
@@ -658,27 +783,31 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--once", action="store_true", help="run one pass and exit")
     ap.add_argument("--replies", action="store_true", help="only answer Telegram replies and exit")
-    ap.add_argument("--dry-run", choices=["cards", "boxes", "all"],
+    ap.add_argument("--dry-run", choices=["cards", "boxes", "sorcery", "all"],
                     help="search eBay and print the cheapest match for each line; saves and sends nothing")
     args = ap.parse_args()
 
     if args.dry_run:
-        entries = {"cards": load_cards, "boxes": load_boxes, "all": load_all}[args.dry_run]()
+        entries = {"cards": load_cards, "boxes": load_boxes, "sorcery": load_sorcery, "all": load_all}[args.dry_run]()
         get_token()
+        single = [e for e in entries if e["kind"] != "sorcery"]
         with ThreadPoolExecutor(max_workers=PARALLEL_SEARCHES) as pool:
-            for entry, (offer, error) in zip(entries, pool.map(fetch_offer, entries)):
-                result = error or (describe(offer) + f"\n      {offer['url']}" if offer else "no listing")
-                print(f"{entry['num']:>4}. {entry['label']}: {result}", flush=True)
-                if entry["kind"] == "box" and not offer and not error:
-                    # show what eBay returned without the condition filter, and why each was skipped
-                    type_query = "play" if entry["box"] == "play" else "(collector, collectors)"
-                    for new_only in (True, False):
-                        items = search(f"{entry['ebay_names'][-1]} {type_query} booster", category=None,
-                                       min_price=BOX_MIN_PRICE[entry["box"]], new_only=new_only)
-                        print(f"      {len(items)} results{' (New only)' if new_only else ' (any condition)'}")
-                        for item in items[:8]:
-                            print(f"        £{item.get('price', {}).get('value')} [{item.get('condition')}] "
-                                  f"{why_not_box(item.get('title', ''), entry) or 'OK'} | {item.get('title')}")
+            found = dict(zip((e["key"] for e in single), pool.map(fetch_offer, single)))
+        sorcery = [e for e in entries if e["kind"] == "sorcery"]
+        found.update(zip((e["key"] for e in sorcery), sorcery_results(sorcery)))
+        for entry, (offer, error) in ((e, found[e["key"]]) for e in entries):
+            result = error or (describe(offer) + f"\n      {offer['url']}" if offer else "no listing")
+            print(f"{entry['num']:>4}. {entry['label']}: {result}", flush=True)
+            if entry["kind"] == "box" and not offer and not error:
+                # show what eBay returned without the condition filter, and why each was skipped
+                type_query = "play" if entry["box"] == "play" else "(collector, collectors)"
+                for new_only in (True, False):
+                    items = search(f"{entry['ebay_names'][-1]} {type_query} booster", category=None,
+                                   min_price=BOX_MIN_PRICE[entry["box"]], new_only=new_only)
+                    print(f"      {len(items)} results{' (New only)' if new_only else ' (any condition)'}")
+                    for item in items[:8]:
+                        print(f"        £{item.get('price', {}).get('value')} [{item.get('condition')}] "
+                              f"{why_not_box(item.get('title', ''), entry) or 'OK'} | {item.get('title')}")
         return
 
     state = load_state()

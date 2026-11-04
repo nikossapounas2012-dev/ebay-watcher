@@ -9,7 +9,7 @@ on:
       what:
         description: "Which list to search"
         type: choice
-        options: [boxes, cards, all]
+        options: [boxes, sorcery, cards, all]
         default: boxes
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
           python-version: "3.12"
 
       - name: Search eBay
-        run: python probe.py
+        run: python ebay_watch.py --dry-run "$WHAT"
         env:
           WHAT: ${{ inputs.what }}
           DATA_DIR: dry-run-data

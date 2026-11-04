@@ -1,0 +1,391 @@
+# Sorcery: Contested Realm Unique cards, one per line:  Card name | Set | Standard or Foil
+#   - a listing counts if its title has the card name (and not a longer card name that contains it),
+#     says foil for Foil lines (and not foil / says non-foil for Standard lines),
+#     and doesn't name a different set
+# The number in Telegram is S + the line's position (S1, S2...) - add new lines at the END to keep numbers.
+# Generated from the official Sorcery card database (api.sorcerytcg.com): every Unique printed in
+#   Gothic, Arthurian Legends and Dragonlord, in each finish it exists in.
+
+[Gothic]
+Aino | Gothic | Standard
+Aino | Gothic | Foil
+Algor Omphalos | Gothic | Standard
+Algor Omphalos | Gothic | Foil
+All Mortals Gone | Gothic | Standard
+All Mortals Gone | Gothic | Foil
+Altar of Malachai | Gothic | Standard
+Altar of Malachai | Gothic | Foil
+Apostles of Thamariel | Gothic | Standard
+Apostles of Thamariel | Gothic | Foil
+Archangel Gabriel | Gothic | Standard
+Archangel Gabriel | Gothic | Foil
+Archangel Michael | Gothic | Standard
+Archangel Michael | Gothic | Foil
+Archangel Raphael | Gothic | Standard
+Archangel Raphael | Gothic | Foil
+Archangel Samael | Gothic | Standard
+Archangel Samael | Gothic | Foil
+Armageddon | Gothic | Standard
+Armageddon | Gothic | Foil
+Army of the Dead | Gothic | Standard
+Army of the Dead | Gothic | Foil
+Asmodeus | Gothic | Standard
+Asmodeus | Gothic | Foil
+Baba Yaga's Hut | Gothic | Standard
+Baba Yaga's Hut | Gothic | Foil
+Balor of the Evil Eye | Gothic | Standard
+Balor of the Evil Eye | Gothic | Foil
+Bane of Aventis | Gothic | Standard
+Bane of Aventis | Gothic | Foil
+Black Mass | Gothic | Standard
+Black Mass | Gothic | Foil
+Blasphemy | Gothic | Standard
+Blasphemy | Gothic | Foil
+Blaze of Glory | Gothic | Standard
+Blaze of Glory | Gothic | Foil
+Blood Mana | Gothic | Standard
+Blood Mana | Gothic | Foil
+Bodach Bogeyman | Gothic | Standard
+Bodach Bogeyman | Gothic | Foil
+Book of Blessings | Gothic | Standard
+Book of Blessings | Gothic | Foil
+Book of the Dead | Gothic | Standard
+Book of the Dead | Gothic | Foil
+Cage of Sidrak | Gothic | Standard
+Cage of Sidrak | Gothic | Foil
+Chaoswish | Gothic | Standard
+Chaoswish | Gothic | Foil
+Char Omphalos | Gothic | Standard
+Char Omphalos | Gothic | Foil
+Chorus of Condemnation | Gothic | Standard
+Chorus of Condemnation | Gothic | Foil
+City of Glass | Gothic | Standard
+City of Glass | Gothic | Foil
+City of Plenty | Gothic | Standard
+City of Plenty | Gothic | Foil
+City of Souls | Gothic | Standard
+City of Souls | Gothic | Foil
+City of Traitors | Gothic | Standard
+City of Traitors | Gothic | Foil
+Dank Omphalos | Gothic | Standard
+Dank Omphalos | Gothic | Foil
+Darkest Dungeon | Gothic | Standard
+Darkest Dungeon | Gothic | Foil
+Day of Judgment | Gothic | Standard
+Day of Judgment | Gothic | Foil
+De Vermis Mysteriis | Gothic | Standard
+De Vermis Mysteriis | Gothic | Foil
+Deathwish | Gothic | Standard
+Deathwish | Gothic | Foil
+Defiler Spire | Gothic | Standard
+Defiler Spire | Gothic | Foil
+Deliverance | Gothic | Standard
+Deliverance | Gothic | Foil
+Divine Intervention | Gothic | Standard
+Divine Intervention | Gothic | Foil
+Doctor Demetrius | Gothic | Standard
+Doctor Demetrius | Gothic | Foil
+Draconian Bonekite | Gothic | Standard
+Draconian Bonekite | Gothic | Foil
+Eclipse | Gothic | Standard
+Eclipse | Gothic | Foil
+Endless Fence | Gothic | Standard
+Endless Fence | Gothic | Foil
+Ether Core | Gothic | Standard
+Ether Core | Gothic | Foil
+Evil Twin | Gothic | Standard
+Evil Twin | Gothic | Foil
+Flame of the First Ones | Gothic | Standard
+Flame of the First Ones | Gothic | Foil
+Garden of Eden | Gothic | Standard
+Garden of Eden | Gothic | Foil
+Gilman House | Gothic | Standard
+Gilman House | Gothic | Foil
+Goat for Azazel | Gothic | Standard
+Goat for Azazel | Gothic | Foil
+Golden Dawn | Gothic | Standard
+Golden Dawn | Gothic | Foil
+Grigori Rasputin | Gothic | Standard
+Grigori Rasputin | Gothic | Foil
+Hellmouth | Gothic | Standard
+Hellmouth | Gothic | Foil
+Hellstar | Gothic | Standard
+Hellstar | Gothic | Foil
+Horns of Behemoth | Gothic | Standard
+Horns of Behemoth | Gothic | Foil
+Howl from Beyond | Gothic | Standard
+Howl from Beyond | Gothic | Foil
+I Am Colossus! | Gothic | Standard
+I Am Colossus! | Gothic | Foil
+Innsmouth Dock | Gothic | Standard
+Innsmouth Dock | Gothic | Foil
+Jack the Ripper | Gothic | Standard
+Jack the Ripper | Gothic | Foil
+Key to the City | Gothic | Standard
+Key to the City | Gothic | Foil
+Kiss of Judas | Gothic | Standard
+Kiss of Judas | Gothic | Foil
+Kor Crematory | Gothic | Standard
+Kor Crematory | Gothic | Foil
+Koschei's Egg | Gothic | Standard
+Koschei's Egg | Gothic | Foil
+Lifewish | Gothic | Standard
+Lifewish | Gothic | Foil
+Lilith | Gothic | Standard
+Lilith | Gothic | Foil
+Locusts of Illyria | Gothic | Standard
+Locusts of Illyria | Gothic | Foil
+Maiden, Mother, Crone | Gothic | Standard
+Maiden, Mother, Crone | Gothic | Foil
+Mephistopheles | Gothic | Standard
+Mephistopheles | Gothic | Foil
+Mount Ussar Sanctuary | Gothic | Standard
+Mount Ussar Sanctuary | Gothic | Foil
+Mover of Mountains | Gothic | Standard
+Mover of Mountains | Gothic | Foil
+Myrrh's Trophy Room | Gothic | Standard
+Myrrh's Trophy Room | Gothic | Foil
+Nosferatu | Gothic | Standard
+Nosferatu | Gothic | Foil
+Old Mortimer's Den | Gothic | Standard
+Old Mortimer's Den | Gothic | Foil
+Orpheus' Crossing | Gothic | Standard
+Orpheus' Crossing | Gothic | Foil
+Peace Offering | Gothic | Standard
+Peace Offering | Gothic | Foil
+Pied Piper of Hameln | Gothic | Standard
+Pied Piper of Hameln | Gothic | Foil
+Plate of the Whale | Gothic | Standard
+Plate of the Whale | Gothic | Foil
+Powerwish | Gothic | Standard
+Powerwish | Gothic | Foil
+Purgatory | Gothic | Standard
+Purgatory | Gothic | Foil
+Putrid Presence | Gothic | Standard
+Putrid Presence | Gothic | Foil
+Red Rock of Ravannis | Gothic | Standard
+Red Rock of Ravannis | Gothic | Foil
+Returned King | Gothic | Standard
+Returned King | Gothic | Foil
+Saint of Redemption | Gothic | Standard
+Saint of Redemption | Gothic | Foil
+Saintweald | Gothic | Standard
+Saintweald | Gothic | Foil
+Salt the Earth | Gothic | Standard
+Salt the Earth | Gothic | Foil
+Satanic Panic | Gothic | Standard
+Satanic Panic | Gothic | Foil
+Sea of Ash | Gothic | Standard
+Sea of Ash | Gothic | Foil
+Sister Stefánia | Gothic | Standard
+Sister Stefánia | Gothic | Foil
+Sow the Earth | Gothic | Standard
+Sow the Earth | Gothic | Foil
+Tabula Rasa | Gothic | Standard
+Tabula Rasa | Gothic | Foil
+Temple of Moloch | Gothic | Standard
+Temple of Moloch | Gothic | Foil
+The Apex of Babel | Gothic | Standard
+The Apex of Babel | Gothic | Foil
+The Doom of Dilmun | Gothic | Standard
+The Doom of Dilmun | Gothic | Foil
+The Empyrean | Gothic | Standard
+The Empyrean | Gothic | Foil
+The Flood | Gothic | Standard
+The Flood | Gothic | Foil
+The Hexham Haunts | Gothic | Standard
+The Hexham Haunts | Gothic | Foil
+The Inquisition | Gothic | Standard
+The Inquisition | Gothic | Foil
+The Malleus Maleficarum | Gothic | Standard
+The Malleus Maleficarum | Gothic | Foil
+The Manor at Daperyll Hill | Gothic | Standard
+The Manor at Daperyll Hill | Gothic | Foil
+The Pallid Bust | Gothic | Standard
+The Pallid Bust | Gothic | Foil
+The Rack | Gothic | Standard
+The Rack | Gothic | Foil
+The Void | Gothic | Standard
+The Void | Gothic | Foil
+Thing in the Ice | Gothic | Standard
+Thing in the Ice | Gothic | Foil
+Torrid Omphalos | Gothic | Standard
+Torrid Omphalos | Gothic | Foil
+Varistus the Evictor | Gothic | Standard
+Varistus the Evictor | Gothic | Foil
+Watery Grave | Gothic | Standard
+Watery Grave | Gothic | Foil
+Yog-Sothoth | Gothic | Standard
+Yog-Sothoth | Gothic | Foil
+Young Master Damion | Gothic | Standard
+Young Master Damion | Gothic | Foil
+
+[Arthurian Legends]
+13 Treasures of Britain | Arthurian Legends | Standard
+13 Treasures of Britain | Arthurian Legends | Foil
+A Midsummer Night's Dream | Arthurian Legends | Standard
+A Midsummer Night's Dream | Arthurian Legends | Foil
+Amulet of Niniane | Arthurian Legends | Standard
+Amulet of Niniane | Arthurian Legends | Foil
+Avalon | Arthurian Legends | Standard
+Avalon | Arthurian Legends | Foil
+Blunderbore | Arthurian Legends | Standard
+Blunderbore | Arthurian Legends | Foil
+Boudicca | Arthurian Legends | Standard
+Boudicca | Arthurian Legends | Foil
+Bower of Bliss | Arthurian Legends | Standard
+Bower of Bliss | Arthurian Legends | Foil
+Brocéliande | Arthurian Legends | Standard
+Brocéliande | Arthurian Legends | Foil
+Bruin | Arthurian Legends | Standard
+Caerleon-Upon-Usk | Arthurian Legends | Standard
+Caerleon-Upon-Usk | Arthurian Legends | Foil
+Camelot | Arthurian Legends | Standard
+Camelot | Arthurian Legends | Foil
+Dame Britomart | Arthurian Legends | Standard
+Dame Britomart | Arthurian Legends | Foil
+Dozmary Pool | Arthurian Legends | Standard
+Dozmary Pool | Arthurian Legends | Foil
+Excalibur | Arthurian Legends | Standard
+Excalibur | Arthurian Legends | Foil
+Fail-not Bow | Arthurian Legends | Standard
+Fail-not Bow | Arthurian Legends | Foil
+Feast for Crows | Arthurian Legends | Standard
+Feast for Crows | Arthurian Legends | Foil
+Fields of Camlann | Arthurian Legends | Standard
+Fields of Camlann | Arthurian Legends | Foil
+Four Waters of Paradise | Arthurian Legends | Standard
+Four Waters of Paradise | Arthurian Legends | Foil
+Glastonbury Tor | Arthurian Legends | Standard
+Glastonbury Tor | Arthurian Legends | Foil
+Joyous Garde | Arthurian Legends | Standard
+Joyous Garde | Arthurian Legends | Foil
+King Arthur | Arthurian Legends | Standard
+King Arthur | Arthurian Legends | Foil
+Lady Iseult | Arthurian Legends | Standard
+Lady Iseult | Arthurian Legends | Foil
+Merlin | Arthurian Legends | Standard
+Merlin | Arthurian Legends | Foil
+Merlin's Staff | Arthurian Legends | Standard
+Merlin's Staff | Arthurian Legends | Foil
+Merlin's Tower | Arthurian Legends | Standard
+Merlin's Tower | Arthurian Legends | Foil
+Mesmerism | Arthurian Legends | Standard
+Mesmerism | Arthurian Legends | Foil
+Morgana le Fay | Arthurian Legends | Standard
+Morgana le Fay | Arthurian Legends | Foil
+Nelly Longarms | Arthurian Legends | Standard
+Nelly Longarms | Arthurian Legends | Foil
+Peasant Revolt | Arthurian Legends | Standard
+Peasant Revolt | Arthurian Legends | Foil
+Pendragon Legacy | Arthurian Legends | Standard
+Pendragon Legacy | Arthurian Legends | Foil
+Queen Guinevere | Arthurian Legends | Standard
+Queen Guinevere | Arthurian Legends | Foil
+Questing Beast | Arthurian Legends | Standard
+Questing Beast | Arthurian Legends | Foil
+Rebecks | Arthurian Legends | Standard
+Rebecks | Arthurian Legends | Foil
+Rhitta Gawr of Snowdonia | Arthurian Legends | Standard
+Rhitta Gawr of Snowdonia | Arthurian Legends | Foil
+Rhongomyniad | Arthurian Legends | Standard
+Rhongomyniad | Arthurian Legends | Foil
+Ring of Morrigan | Arthurian Legends | Standard
+Ring of Morrigan | Arthurian Legends | Foil
+Sir Agravaine | Arthurian Legends | Standard
+Sir Agravaine | Arthurian Legends | Foil
+Sir Balin | Arthurian Legends | Standard
+Sir Balin | Arthurian Legends | Foil
+Sir Bedivere | Arthurian Legends | Standard
+Sir Bedivere | Arthurian Legends | Foil
+Sir Bors the Younger | Arthurian Legends | Standard
+Sir Bors the Younger | Arthurian Legends | Foil
+Sir Gaheris | Arthurian Legends | Standard
+Sir Gaheris | Arthurian Legends | Foil
+Sir Galahad | Arthurian Legends | Standard
+Sir Galahad | Arthurian Legends | Foil
+Sir Gareth | Arthurian Legends | Standard
+Sir Gareth | Arthurian Legends | Foil
+Sir Gawain | Arthurian Legends | Standard
+Sir Gawain | Arthurian Legends | Foil
+Sir Ironside | Arthurian Legends | Standard
+Sir Ironside | Arthurian Legends | Foil
+Sir Kay | Arthurian Legends | Standard
+Sir Kay | Arthurian Legends | Foil
+Sir Lamorak | Arthurian Legends | Standard
+Sir Lamorak | Arthurian Legends | Foil
+Sir Lancelot | Arthurian Legends | Standard
+Sir Lancelot | Arthurian Legends | Foil
+Sir Mordred | Arthurian Legends | Standard
+Sir Mordred | Arthurian Legends | Foil
+Sir Morien | Arthurian Legends | Standard
+Sir Morien | Arthurian Legends | Foil
+Sir Pelleas | Arthurian Legends | Standard
+Sir Pelleas | Arthurian Legends | Foil
+Sir Pellinore | Arthurian Legends | Standard
+Sir Pellinore | Arthurian Legends | Foil
+Sir Perceval | Arthurian Legends | Standard
+Sir Perceval | Arthurian Legends | Foil
+Sir Priamus | Arthurian Legends | Standard
+Sir Priamus | Arthurian Legends | Foil
+Sir Tom Thumb | Arthurian Legends | Standard
+Sir Tom Thumb | Arthurian Legends | Foil
+Sir Tristan | Arthurian Legends | Standard
+Sir Tristan | Arthurian Legends | Foil
+Sir Yvain | Arthurian Legends | Standard
+Sir Yvain | Arthurian Legends | Foil
+Tawny | Arthurian Legends | Standard
+The Black Plague | Arthurian Legends | Standard
+The Black Plague | Arthurian Legends | Foil
+The Faerie Queene | Arthurian Legends | Standard
+The Faerie Queene | Arthurian Legends | Foil
+The Great Drowning of Men | Arthurian Legends | Standard
+The Great Drowning of Men | Arthurian Legends | Foil
+The Great Famine | Arthurian Legends | Standard
+The Great Famine | Arthurian Legends | Foil
+The Green Knight | Arthurian Legends | Standard
+The Green Knight | Arthurian Legends | Foil
+The Lady of the Lake | Arthurian Legends | Standard
+The Lady of the Lake | Arthurian Legends | Foil
+The Ninth Legion | Arthurian Legends | Standard
+The Ninth Legion | Arthurian Legends | Foil
+The Round Table | Arthurian Legends | Standard
+The Round Table | Arthurian Legends | Foil
+Tintagel | Arthurian Legends | Standard
+Tintagel | Arthurian Legends | Foil
+Tithe | Arthurian Legends | Standard
+Tithe | Arthurian Legends | Foil
+Vivien the Enchantress | Arthurian Legends | Standard
+Vivien the Enchantress | Arthurian Legends | Foil
+White Hart | Arthurian Legends | Standard
+White Hart | Arthurian Legends | Foil
+Wormelow Tump | Arthurian Legends | Standard
+Wormelow Tump | Arthurian Legends | Foil
+Year of the Blaze | Arthurian Legends | Standard
+Year of the Blaze | Arthurian Legends | Foil
+
+[Dragonlord]
+Adtonitum | Dragonlord | Standard
+Adtonitum | Dragonlord | Foil
+Caelestis | Dragonlord | Standard
+Caelestis | Dragonlord | Foil
+Cradle of Etherrum | Dragonlord | Standard
+Cradle of Etherrum | Dragonlord | Foil
+Draco Corvus | Dragonlord | Standard
+Draco Corvus | Dragonlord | Foil
+Dragonlord's Lair | Dragonlord | Standard
+Dragonlord's Lair | Dragonlord | Foil
+Ignis Rex | Dragonlord | Standard
+Ignis Rex | Dragonlord | Foil
+Kairos the Archivist | Dragonlord | Standard
+Kairos the Archivist | Dragonlord | Foil
+Moonsong Talagelum | Dragonlord | Standard
+Moonsong Talagelum | Dragonlord | Foil
+Shrine of the Dragonlord | Dragonlord | Standard
+Shrine of the Dragonlord | Dragonlord | Foil
+Talamh Dreig | Dragonlord | Standard
+Talamh Dreig | Dragonlord | Foil
+Vatn Draconis | Dragonlord | Standard
+Vatn Draconis | Dragonlord | Foil
+Xeraphine Konrul | Dragonlord | Standard
+Xeraphine Konrul | Dragonlord | Foil
