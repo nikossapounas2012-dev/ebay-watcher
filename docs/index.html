@@ -69,6 +69,9 @@ h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
 .row:hover { background: var(--hover); }
 .num { color: var(--faint); font-size: 13px; }
 .name, .who .meta { display: block; }
+.who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.who > span { min-width: 0; }
+.thumb { flex: none; width: 40px; height: 54px; object-fit: contain; border-radius: 4px; background: var(--hover); }
 .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
 .meta { color: var(--muted); font-size: 13px; }
 .price { text-align: right; }
@@ -311,6 +314,10 @@ function build(list, { prices, matches, hist, refs }) {
     c.vsMarket = cur && c.market && c.market.price ? cur.price / c.market.price - 1 : null;
     c.deal = c.vsMarket !== null && c.vsMarket <= DEAL - 1;
     c.search = `${c.n} ${c.name} ${c.code} ${c.rarity} ${c.section}`.toLowerCase();
+    // picture: TCGplayer's product image where matched, else the cheapest eBay listing's photo
+    const tcg = c.matches.tcgplayer && c.matches.tcgplayer.product;
+    c.image = tcg ? `https://tcgplayer-cdn.tcgplayer.com/product/${encodeURIComponent(tcg)}_200w.jpg`
+      : (cur && cur.image) || "";
     c.cheapest = compare(c) && cur && Object.values(c.latest).every((r) => r.low == null || cur.price <= r.low);
   }
   return list;
@@ -499,7 +506,8 @@ function rowHTML(c) {
     ? `<b class="${c.market.source === "tcgplayer" ? "tcg" : ""}">${gbp(c.market.price)}</b><small>${SOURCES[c.market.source].label}</small>`
     : `<b class="none">–</b><small>no market price</small>`;
   return `<span class="num">${c.n}</span>
-    <span class="who"><span class="name">${esc(c.name)}</span><span class="meta">${esc(meta)}</span></span>
+    <span class="who">${c.image ? `<img class="thumb" src="${esc(c.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : '<span class="thumb"></span>'}
+      <span><span class="name">${esc(c.name)}</span><span class="meta">${esc(meta)}</span></span></span>
     <span class="sparkslot"></span>
     <span class="price now">${now}</span>
     <span class="price low">${low}</span>

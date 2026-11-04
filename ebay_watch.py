@@ -566,6 +566,8 @@ def cheapest_of(items, matches):
                 "condition": item.get("condition", ""),
                 "seller": (item.get("seller") or {}).get("username", ""),
                 "url": item.get("itemWebUrl", "").split("?")[0],   # drop eBay's tracking parameters
+                "image": ((item.get("thumbnailImages") or [{}])[0].get("imageUrl")
+                          or (item.get("image") or {}).get("imageUrl", "")),
                 "first_edition": bool({"1st", "first"} & set(words_of(title))),
             }
     return best
