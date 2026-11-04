@@ -2,7 +2,7 @@ name: eBay price watch
 
 on:
   schedule:
-    # every 2 hours at :17 (UTC). ~260 printings x 12 runs = ~3,100 eBay searches a day
+    # every 2 hours at :17 (UTC). ~260 printings + ~50 box searches x 12 runs = ~3,800 eBay searches a day
     # (eBay allows 5,000). GitHub often starts a few minutes late.
     - cron: "17 */2 * * *"
   workflow_dispatch:          # adds a "Run workflow" button to run it by hand

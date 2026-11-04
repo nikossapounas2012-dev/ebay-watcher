@@ -1,0 +1,55 @@
+# Magic: The Gathering booster boxes, one per line:  Set name | Set code | Play or Collector | eBay name (optional)
+#   - Set name is shown on the website; the set code links it to TCGplayer and Cardmarket
+#   - eBay name: the words sellers use in titles, when shorter than the set name
+#     (e.g. "Duskmourn" for Duskmourn: House of Horror). Several with / between them.
+#   - a listing counts if its title has the eBay name, the box type and "box" or "display"
+#   - only sealed (eBay condition "New") English boxes count: cases, single packs, Omega boxes,
+#     opened boxes and listings naming another language are skipped
+# The number in Telegram is B + the line's position (B1, B2...) - add new lines at the END to keep numbers.
+# Generated from TCGplayer: every set with a Play Booster box since Murders at Karlov Manor (Feb 2024).
+
+[Play booster boxes]
+Murders at Karlov Manor | MKM | Play | Karlov Manor
+Outlaws of Thunder Junction | OTJ | Play | Thunder Junction
+Modern Horizons 3 | MH3 | Play | Modern Horizons 3 / MH3
+Bloomburrow | BLB | Play
+Duskmourn: House of Horror | DSK | Play | Duskmourn
+Foundations | FDN | Play
+Innistrad Remastered | INR | Play
+Aetherdrift | DFT | Play
+Tarkir: Dragonstorm | TDM | Play | Dragonstorm
+Final Fantasy | FIN | Play
+Edge of Eternities | EOE | Play
+Marvel's Spider-Man | SPM | Play | Spider-Man / Spiderman
+Avatar: The Last Airbender | TLA | Play | Avatar
+Lorwyn Eclipsed | ECL | Play
+Teenage Mutant Ninja Turtles | TMT | Play | Ninja Turtles / TMNT
+Secrets of Strixhaven | SOS | Play
+Marvel Super Heroes | MSH | Play
+The Hobbit | HOB | Play | Hobbit
+Reality Fracture | FRA | Play
+Star Trek | TRK | Play
+
+[Collector booster boxes]
+Murders at Karlov Manor | MKM | Collector | Karlov Manor
+Fallout | PIP | Collector
+Outlaws of Thunder Junction | OTJ | Collector | Thunder Junction
+Modern Horizons 3 | MH3 | Collector | Modern Horizons 3 / MH3
+Assassin's Creed | ACR | Collector
+Bloomburrow | BLB | Collector
+Duskmourn: House of Horror | DSK | Collector | Duskmourn
+Foundations | FDN | Collector
+Innistrad Remastered | INR | Collector
+Aetherdrift | DFT | Collector
+Tarkir: Dragonstorm | TDM | Collector | Dragonstorm
+Final Fantasy | FIN | Collector
+Edge of Eternities | EOE | Collector
+Marvel's Spider-Man | SPM | Collector | Spider-Man / Spiderman
+Avatar: The Last Airbender | TLA | Collector | Avatar
+Lorwyn Eclipsed | ECL | Collector
+Teenage Mutant Ninja Turtles | TMT | Collector | Ninja Turtles / TMNT
+Secrets of Strixhaven | SOS | Collector
+Marvel Super Heroes | MSH | Collector
+The Hobbit | HOB | Collector | Hobbit
+Reality Fracture | FRA | Collector
+Star Trek | TRK | Collector

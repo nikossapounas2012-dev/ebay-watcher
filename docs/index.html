@@ -3,26 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Card Price Charts</title>
-<meta name="description" content="Cheapest UK Buy It Now price for each watched Yu-Gi-Oh! printing, checked every 2 hours.">
+<title>Price Charts</title>
+<meta name="description" content="Cheapest UK eBay price for watched Yu-Gi-Oh! cards and MTG booster boxes, next to Cardmarket and TCGplayer.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 12 5 8l3 2 7-7' fill='none' stroke='%232f6fdb' stroke-width='2'/%3E%3C/svg%3E">
 <style>
 :root {
   --bg: #f6f7f9; --panel: #ffffff; --text: #16191d; --muted: #646b75; --faint: #9aa1ab;
   --border: #e3e6ea; --hover: #f0f3f7; --line: #2f6fdb; --low: #16884a; --low-bg: #e3f4ea;
-  --now: #c05a00; --up: #c62f2f; --grid: #eceef1; --focus: #2f6fdb; --cm: #7b4fd6; --tcg: #6f7b89;
+  --now: #c05a00; --up: #c62f2f; --grid: #eceef1; --focus: #2f6fdb; --cm: #7b4fd6; --tcg: #11807f;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #111317; --panel: #1a1d22; --text: #e8eaed; --muted: #a0a6b0; --faint: #6c737d;
     --border: #2c3037; --hover: #22262c; --line: #6b9ff5; --low: #4cc584; --low-bg: #193326;
-    --now: #f29a45; --up: #f07070; --grid: #262a30; --focus: #6b9ff5; --cm: #b195f5; --tcg: #8e9aa8;
+    --now: #f29a45; --up: #f07070; --grid: #262a30; --focus: #6b9ff5; --cm: #b195f5; --tcg: #4cc3bf;
   }
 }
 :root[data-theme="dark"] {
   --bg: #111317; --panel: #1a1d22; --text: #e8eaed; --muted: #a0a6b0; --faint: #6c737d;
   --border: #2c3037; --hover: #22262c; --line: #6b9ff5; --low: #4cc584; --low-bg: #193326;
-  --now: #f29a45; --up: #f07070; --grid: #262a30; --focus: #6b9ff5; --cm: #b195f5; --tcg: #8e9aa8;
+  --now: #f29a45; --up: #f07070; --grid: #262a30; --focus: #6b9ff5; --cm: #b195f5; --tcg: #4cc3bf;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -53,6 +53,12 @@ h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
   color: var(--muted); background: var(--bg); border-top: 1px solid var(--border);
 }
 .section-head:first-child { border-top: 0; }
+.tabs { display: inline-flex; gap: 4px; padding: 4px; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 10px; margin: 0 0 16px; max-width: 100%; }
+.tabs button { font: inherit; font-weight: 600; font-size: 14px; color: var(--muted); background: none; border: 0;
+  border-radius: 7px; padding: 7px 14px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--line); color: #fff; }
+.list.boxes .row { grid-template-columns: 36px minmax(0, 1fr) 168px repeat(4, 88px); }
 .row {
   display: grid; grid-template-columns: 36px minmax(0, 1fr) 168px 92px 104px 104px;
   gap: 12px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--border);
@@ -71,7 +77,8 @@ h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
 .price.now b { color: var(--now); }
 .price.low b { color: var(--low); }
 .price.mkt b { color: var(--cm); }
-.price.mkt b.tcg { color: var(--tcg); }
+.price.mkt b.tcg, .price b.tcgplayer { color: var(--tcg); }
+.price b.cardmarket { color: var(--cm); }
 .price .none { color: var(--faint); font-weight: 400; font-size: 14px; }
 .badge.deal { color: var(--now); background: transparent; border: 1px solid var(--now); margin-left: 0; }
 .legend i.ln { width: 14px; height: 0; border-radius: 0; border-top: 2px dashed; vertical-align: 3px; background: none; }
@@ -110,6 +117,11 @@ td.r, th.r { text-align: right; }
   .row .sparkslot, .row .spark { grid-area: spark; width: 100%; }
   .row .now { grid-area: now; text-align: left; } .row .low { grid-area: low; text-align: left; }
   .row .mkt { grid-area: mkt; text-align: left; }
+  .list.boxes .row {
+    grid-template-columns: 22px repeat(4, minmax(0, 1fr)); grid-template-areas:
+      "num name name name name" ". spark spark spark spark" ". now low mkt mkt2";
+  }
+  .row .mkt2 { grid-area: mkt2; text-align: left; }
   .detail .big { height: 200px; }
   .hide-sm { display: none; }
 }
@@ -117,9 +129,13 @@ td.r, th.r { text-align: right; }
 </head>
 <body>
 <div class="wrap">
-  <h1>Card price charts</h1>
-  <p class="sub">Cheapest UK Buy It Now listing for each printing, postage included, checked every 2 hours —
-    next to Cardmarket (EU) and TCGplayer (US) market prices in pounds, saved daily.</p>
+  <h1>Price charts</h1>
+  <p class="sub">Cheapest UK eBay Buy It Now listing, postage included, checked every 2 hours —
+    next to Cardmarket (EU) and TCGplayer (US) prices in pounds, saved daily.</p>
+  <div class="tabs" role="tablist">
+    <button role="tab" data-mode="cards">Yu-Gi-Oh! cards</button>
+    <button role="tab" data-mode="boxes">MTG booster boxes</button>
+  </div>
 
   <div class="stats" id="stats"></div>
 
@@ -140,14 +156,7 @@ td.r, th.r { text-align: right; }
       <option value="desc">Sort: dearest first</option>
     </select>
   </div>
-  <div class="legend">
-    <span><i style="background:var(--now)"></i>Current lowest</span>
-    <span><i style="background:var(--low)"></i>Lowest found</span>
-    <span><i class="ln" style="color:var(--cm)"></i>Cardmarket trend</span>
-    <span><i class="ln" style="color:var(--tcg)"></i>TCGplayer market</span>
-    <span>▼▲ change since first seen</span>
-    <span>Tap a card for its full chart and price changes</span>
-  </div>
+  <div class="legend" id="legend"></div>
 
   <div class="list" id="list"><div class="msg">Loading prices…</div></div>
   <p class="foot" id="foot"></p>
@@ -164,7 +173,9 @@ const SOURCES = {
 };
 const DEAL = 0.8;   // an eBay price at or under 80% of the market price counts as a deal
 const SVG = "http://www.w3.org/2000/svg";
-let cards = [];
+const data = { cards: [], boxes: [] };
+let mode = location.hash === "#boxes" ? "boxes" : "cards";
+let cards = [];          // the list being shown
 const open = new Set();
 
 const $ = (id) => document.getElementById(id);
@@ -193,8 +204,25 @@ function parseCards(text) {
     if (line.startsWith("[") && line.endsWith("]")) { section = line.slice(1, -1).trim(); continue; }
     const p = line.split("|").map((s) => s.trim()).concat(["", "", ""]);
     const name = p[0], code = p[1].toUpperCase(), rarity = p[2].toLowerCase(), edition = p[3].toLowerCase();
-    out.push({ n: out.length + 1, section, name, code, rarity: RARITY_SHORT[rarity] || p[2],
-               edition, key: line });
+    const short = RARITY_SHORT[rarity] || p[2];
+    out.push({ n: String(out.length + 1), kind: "card", section, name, code, rarity: short, edition, key: line,
+               meta: [code, short, edition === "25th" ? "25th Anniversary" : edition === "original" ? "original print" : ""]
+                 .filter(Boolean).join(" · ") || "any printing" });
+  }
+  return out;
+}
+
+// same rules as load_boxes() in ebay_watch.py: numbers B1, B2...
+function parseBoxes(text) {
+  const out = []; let section = "";
+  for (let line of (text || "").split(/\r?\n/)) {
+    line = line.trim();
+    if (!line || line.startsWith("#")) continue;
+    if (line.startsWith("[") && line.endsWith("]")) { section = line.slice(1, -1).trim(); continue; }
+    const p = line.split("|").map((s) => s.trim()).concat(["", "", ""]);
+    const box = p[2].toLowerCase() === "play" ? "Play" : "Collector";
+    out.push({ n: "B" + (out.length + 1), kind: "box", section, name: p[0], code: p[1].toUpperCase(), rarity: box,
+               edition: "", key: line, meta: `${p[1].toUpperCase()} · ${box} booster box` });
   }
   return out;
 }
@@ -218,8 +246,7 @@ function parseCSV(text) {
   return rows.filter((r) => r.length > 1).map((r) => Object.fromEntries(head.map((h, i) => [h, r[i] ?? ""])));
 }
 
-function build(cardText, historyText, pricesText, refText, matchesText) {
-  const list = parseCards(cardText);
+function parseData(historyText, pricesText, refText, matchesText) {
   const prices = pricesText ? JSON.parse(pricesText) : {};
   const matches = matchesText ? JSON.parse(matchesText) : {};
   const hist = {}, refs = {};
@@ -232,6 +259,10 @@ function build(cardText, historyText, pricesText, refText, matchesText) {
     ((refs[r.card] ||= {})[r.source] ||= []).push({ t: utc(r.date + "T12:00:00"), price: num(r.price),
       low: num(r.low), avg30: num(r.avg30), product: r.product });
   }
+  return { prices, matches, hist, refs };
+}
+
+function build(list, { prices, matches, hist, refs }) {
   for (const c of list) {
     const pts = (hist[c.key] || []).sort((a, b) => a.t - b.t);
     const cur = prices[c.key] || null;
@@ -249,7 +280,10 @@ function build(cardText, historyText, pricesText, refText, matchesText) {
     c.refs = {}; c.latest = {};
     for (const s in SOURCES) {
       const series = ((refs[c.key] || {})[s] || []).sort((a, b) => a.t - b.t);
-      if (series.length) { c.refs[s] = series; c.latest[s] = series[series.length - 1]; }
+      if (!series.length) continue;
+      c.latest[s] = series[series.length - 1];
+      // boxes: the chart lines are each site's lowest listing; cards: Cardmarket trend / TCGplayer market
+      c.refs[s] = c.kind === "box" ? series.map((r) => ({ ...r, price: r.low ?? r.price })) : series;
     }
     c.matches = matches[c.key] || {};
     // the market price shown in the list: Cardmarket (closer to UK prices), else TCGplayer
@@ -258,6 +292,7 @@ function build(cardText, historyText, pricesText, refText, matchesText) {
     c.vsMarket = cur && c.market && c.market.price ? cur.price / c.market.price - 1 : null;
     c.deal = c.vsMarket !== null && c.vsMarket <= DEAL - 1;
     c.search = `${c.n} ${c.name} ${c.code} ${c.rarity} ${c.section}`.toLowerCase();
+    c.cheapest = c.kind === "box" && cur && Object.values(c.latest).every((r) => r.low == null || cur.price <= r.low);
   }
   return list;
 }
@@ -324,22 +359,24 @@ function markers(svg, c, g, r) {
   }
 }
 
-function refLines(svg, g, width) {
+function refLines(svg, g, width, solid) {
   for (const [s, d] of g.refs) {
     el("path", { d, fill: "none", stroke: SOURCES[s].color, "stroke-width": width,
-                 "stroke-dasharray": "4 3", "stroke-linejoin": "round" }, svg);
+                 ...(solid ? {} : { "stroke-dasharray": "4 3" }), "stroke-linejoin": "round" }, svg);
   }
 }
+const refLabel = (c, s) => `${SOURCES[s].label}${c.kind === "box" ? " lowest" : ""}`;
 
 function spark(c, width) {
   const w = Math.max(Math.round(width) || 168, 60), h = 44;   // drawn at its real width so dots stay round
   const svg = el("svg", { viewBox: `0 0 ${w} ${h}`, class: "spark", "aria-hidden": "true" });
-  const g = geometry(c, w, h, { l: 5, r: 5, t: 6, b: 6 }, c.market ? [c.market.source] : []);
+  const g = geometry(c, w, h, { l: 5, r: 5, t: 6, b: 6 },
+    c.kind === "box" ? Object.keys(SOURCES) : c.market ? [c.market.source] : []);
   if (!g) {
     el("line", { x1: 5, x2: w - 5, y1: h / 2, y2: h / 2, stroke: "var(--grid)", "stroke-dasharray": "3 3" }, svg);
     return svg;
   }
-  refLines(svg, g, 1.25);
+  refLines(svg, g, 1.25, c.kind === "box");
   el("path", { d: g.d, fill: "none", stroke: "var(--line)", "stroke-width": 1.75, "stroke-linejoin": "round" }, svg);
   markers(svg, c, g, 3.5);
   return svg;
@@ -374,7 +411,7 @@ function bigChart(box, c) {
     const ly = g.y(c.lowest.price);
     el("line", { x1: pad.l, x2: w - pad.r, y1: ly, y2: ly, stroke: "var(--low)", "stroke-dasharray": "2 4", opacity: 0.6 }, svg);
   }
-  refLines(svg, g, 1.75);
+  refLines(svg, g, c.kind === "box" ? 2 : 1.75, c.kind === "box");
   el("path", { d: g.d, fill: "none", stroke: "var(--line)", "stroke-width": 2.25, "stroke-linejoin": "round" }, svg);
   markers(svg, c, g, 5);
   if (c.lowest) {
@@ -400,7 +437,7 @@ function bigChart(box, c) {
     if (p) parts.push(`eBay ${p.price === null ? "not listed" : gbp(p.price)}`);
     for (const [s, , series] of g.refs) {
       const r = valueAt(series, t);
-      if (r && r.price !== null) parts.push(`${SOURCES[s].label} ${gbp(r.price)}`);
+      if (r && r.price !== null) parts.push(`${refLabel(c, s)} ${gbp(r.price)}`);
     }
     if (!parts.length) return hide();
     guide.setAttribute("x1", px); guide.setAttribute("x2", px); guide.setAttribute("display", "");
@@ -419,19 +456,25 @@ function bigChart(box, c) {
 const pct = (v) => `${Math.abs(v * 100).toFixed(0)}%`;
 
 function rowHTML(c) {
-  const meta = [c.code, c.rarity, c.edition === "25th" ? "25th Anniversary" : c.edition === "original" ? "original print" : ""]
-    .filter(Boolean).join(" · ") || "any printing";
+  const meta = c.meta;
   let now;
   if (c.current) {
     const chg = c.drop && Math.abs(c.drop) >= 0.005
       ? ` <span class="${c.drop < 0 ? "chg-down" : "chg-up"}">${c.drop < 0 ? "▼" : "▲"}${pct(c.drop)}</span>` : "";
-    now = `<b>${gbp(c.current.price)}</b><small>${c.deal ? `<span class="badge deal">${pct(c.vsMarket)} under</span>` : "now" + chg}</small>`;
+    const tag = c.deal ? `<span class="badge deal">${pct(c.vsMarket)} under</span>`
+      : c.cheapest ? '<span class="badge">cheapest</span>' : "now" + chg;
+    now = `<b>${gbp(c.current.price)}</b><small>${tag}</small>`;
   } else {
     now = `<b class="none">not listed</b><small>${c.end ? "since " + fmtDay(c.end) : "no data yet"}</small>`;
   }
   const low = c.lowest
     ? `<b>${gbp(c.lowest.price)}</b><small>${c.atLow ? '<span class="badge">now</span>' : "lowest · " + fmtDay(c.lowest.t)}</small>`
     : `<b class="none">–</b>`;
+  const lowestAt = (s) => {
+    const r = c.latest[s];
+    return r && r.low != null ? `<b class="${s}">${gbp(r.low)}</b><small>${SOURCES[s].label}</small>`
+      : `<b class="none">–</b><small>${SOURCES[s].label}</small>`;
+  };
   const mkt = c.market
     ? `<b class="${c.market.source === "tcgplayer" ? "tcg" : ""}">${gbp(c.market.price)}</b><small>${SOURCES[c.market.source].label}</small>`
     : `<b class="none">–</b><small>no market price</small>`;
@@ -440,7 +483,9 @@ function rowHTML(c) {
     <span class="sparkslot"></span>
     <span class="price now">${now}</span>
     <span class="price low">${low}</span>
-    <span class="price mkt">${mkt}</span>`;
+    ${c.kind === "box"
+      ? `<span class="price mkt">${lowestAt("cardmarket")}</span><span class="price mkt2">${lowestAt("tcgplayer")}</span>`
+      : `<span class="price mkt">${mkt}</span>`}`;
 }
 
 function refHTML(c, s) {
@@ -449,10 +494,14 @@ function refHTML(c, s) {
   if (!r) return `<div>${label}<span class="meta">${esc(m.note || "no price yet")}</span></div>`;
   const extra = [r.avg30 !== null ? `30-day avg ${gbp(r.avg30)}` : "", r.low !== null ? `lowest listing ${gbp(r.low)}` : ""]
     .filter(Boolean).join(" · ");
+  const game = c.kind === "box" ? "Magic" : "YuGiOh";
+  const query = c.kind === "box" ? `${c.name} ${c.rarity} Booster Box` : c.name;
   const url = s === "tcgplayer" ? `https://www.tcgplayer.com/product/${encodeURIComponent(r.product)}`
-    : `https://www.cardmarket.com/en/YuGiOh/Products/Search?searchString=${encodeURIComponent(c.name)}`;
-  return `<div>${label}${SOURCES[s].what} ${gbp(r.price)} <span class="meta">${fmtDay(r.t)}</span>
-    <span class="meta">${extra}</span>
+    : `https://www.cardmarket.com/en/${game}/Products/Search?searchString=${encodeURIComponent(query)}`;
+  const note = c.kind === "box" && s === "cardmarket" ? " · lowest is any language" : "";
+  const head = r.price != null ? `${SOURCES[s].what} ${gbp(r.price)}` : "";
+  return `<div>${label}${head} <span class="meta">${fmtDay(r.t)}</span>
+    <span class="meta">${extra}${note}</span>
     <a href="${url}" target="_blank" rel="noopener">${s === "tcgplayer" ? "Open on TCGplayer" : "Search Cardmarket"} ↗</a></div>`;
 }
 
@@ -484,7 +533,8 @@ function render() {
   if (sort === "deal") rows.sort((a, b) => (a.vsMarket ?? Infinity) - (b.vsMarket ?? Infinity));
 
   const list = $("list"); list.innerHTML = "";
-  if (!rows.length) { list.innerHTML = '<div class="msg">No cards match.</div>'; return; }
+  list.className = "list " + mode;
+  if (!rows.length) { list.innerHTML = `<div class="msg">No ${mode === "boxes" ? "boxes" : "cards"} match.</div>`; return; }
   let shown = null;
   for (const c of rows) {
     if (sort === "num" && c.section !== shown) {
@@ -516,31 +566,61 @@ function stats() {
   const last = listed.reduce((m, c) => (c.current.t > m ? c.current.t : m), new Date(0));
   const firstSeen = cards.flatMap((c) => c.points.map((p) => p.t)).reduce((m, t) => (!m || t < m ? t : m), null);
   $("stats").innerHTML = [
-    [cards.length, "printings watched"],
+    [cards.length, mode === "boxes" ? "boxes watched" : "printings watched"],
     [listed.length, "listed now"],
     [atLow, "at their lowest now"],
     [deals, `${pct(1 - DEAL)}+ under market`],
     [listed.length ? fmt(last) : "–", "last check"],
   ].map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
   $("foot").textContent = (firstSeen ? `eBay prices recorded since ${fmt(firstSeen, true)}. Lowest found is the cheapest listing seen at any check — it may have sold since. ` : "")
-    + "Market price: Cardmarket trend (EU sales) where matched, otherwise TCGplayer market price (US sales), converted to pounds at that day's ECB rate.";
+    + (mode === "boxes"
+      ? "eBay: sealed (New) English boxes only, postage included. Cardmarket and TCGplayer: lowest listing, without postage; Cardmarket's covers every language. \"Under\" compares eBay with the Cardmarket trend. Converted to pounds at that day's ECB rate."
+      : "Market price: Cardmarket trend (EU sales) where matched, otherwise TCGplayer market price (US sales), converted to pounds at that day's ECB rate.");
 }
 
 async function load() {
   try {
-    const [cardText, historyText, pricesText, refText, matchesText] = await Promise.all([
-      getText("main/ebay_cards.txt"), getText("data/ebay_history.csv"), getText("data/ebay_prices.json"),
-      getText("data/reference_history.csv"), getText("data/reference_matches.json")]);
+    const [cardText, boxText, historyText, pricesText, refText, matchesText] = await Promise.all([
+      getText("main/ebay_cards.txt"), getText("main/mtg_boxes.txt"), getText("data/ebay_history.csv"),
+      getText("data/ebay_prices.json"), getText("data/reference_history.csv"), getText("data/reference_matches.json")]);
     if (!cardText) throw new Error("ebay_cards.txt not found");
-    cards = build(cardText, historyText, pricesText, refText, matchesText);
-    const secs = [...new Set(cards.map((c) => c.section))].filter(Boolean);
-    $("section").innerHTML = '<option value="">All sections</option>' + secs.map((s) => `<option>${esc(s)}</option>`).join("");
-    stats(); render();
+    const parsed = parseData(historyText, pricesText, refText, matchesText);
+    data.cards = build(parseCards(cardText), parsed);
+    data.boxes = build(parseBoxes(boxText), parsed);
+    setMode(mode);
   } catch (e) {
     $("list").innerHTML = `<div class="msg">Could not load prices: ${esc(e.message)}</div>`;
   }
 }
 
+const LEGENDS = {
+  cards: `<span><i style="background:var(--now)"></i>Current lowest</span>
+    <span><i style="background:var(--low)"></i>Lowest found</span>
+    <span><i class="ln" style="color:var(--cm)"></i>Cardmarket trend</span>
+    <span><i class="ln" style="color:var(--tcg)"></i>TCGplayer market</span>
+    <span>▼▲ change since first seen</span>
+    <span>Tap a card for its full chart and price changes</span>`,
+  boxes: `<span><i class="ln" style="color:var(--line);border-top-style:solid"></i>eBay lowest</span>
+    <span><i class="ln" style="color:var(--cm);border-top-style:solid"></i>Cardmarket lowest</span>
+    <span><i class="ln" style="color:var(--tcg);border-top-style:solid"></i>TCGplayer lowest</span>
+    <span><i style="background:var(--now)"></i>eBay now</span>
+    <span><i style="background:var(--low)"></i>eBay lowest found</span>
+    <span>Tap a box for its full chart</span>`,
+};
+
+function setMode(m) {
+  mode = m;
+  cards = data[mode];
+  for (const t of document.querySelectorAll(".tabs button")) t.setAttribute("aria-selected", t.dataset.mode === mode);
+  history.replaceState(null, "", mode === "boxes" ? "#boxes" : location.pathname + location.search);
+  $("legend").innerHTML = LEGENDS[mode];
+  $("q").placeholder = mode === "boxes" ? "Search set, set code or number (B1…)" : "Search card, set code or number";
+  const secs = [...new Set(cards.map((c) => c.section))].filter(Boolean);
+  $("section").innerHTML = '<option value="">All sections</option>' + secs.map((s) => `<option>${esc(s)}</option>`).join("");
+  stats(); render();
+}
+
+for (const t of document.querySelectorAll(".tabs button")) t.addEventListener("click", () => setMode(t.dataset.mode));
 for (const id of ["q", "section", "show", "sort"]) $(id).addEventListener("input", render);
 let rt, lastW = innerWidth;
 addEventListener("resize", () => { if (innerWidth === lastW) return; lastW = innerWidth; clearTimeout(rt); rt = setTimeout(render, 150); });

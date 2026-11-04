@@ -8,6 +8,9 @@ Reference prices for each watched printing, saved once a day next to the eBay hi
 - TCGplayer (US, dollars) via tcgcsv.com: market price (from recent sales) and lowest listing.
   Products there have exact set codes and rarities, so these match automatically.
 
+MTG booster boxes (mtg_boxes.txt) are matched by set code on TCGplayer and by product name
+("<set> Play Booster Box") on Cardmarket. Cardmarket's lowest price covers every language.
+
 All prices are converted to pounds with the day's ECB rate (frankfurter.dev).
 Saved in DATA_DIR:
     reference_history.csv   one row per printing per source per day
@@ -32,8 +35,12 @@ CM_GUIDE = f"{CM_FILES}/priceGuide/price_guide_3.json"          # 3 = Yu-Gi-Oh!
 CM_SINGLES = f"{CM_FILES}/productList/products_singles_3.json"
 CM_SEALED = f"{CM_FILES}/productList/products_nonsingles_3.json"
 TCG = "https://tcgcsv.com/tcgplayer/2"                          # 2 = Yu-Gi-Oh!
+TCG_MTG = "https://tcgcsv.com/tcgplayer/1"                      # 1 = Magic: The Gathering
+CM_MTG_GUIDE = f"{CM_FILES}/priceGuide/price_guide_1.json"      # 1 = Magic: The Gathering
+CM_MTG_SEALED = f"{CM_FILES}/productList/products_nonsingles_1.json"
 YGOPRODECK_URL = "https://db.ygoprodeck.com/api/v7/cardinfo.php"
-RATES_URL = "https://api.frankfurter.dev/v1/latest?from=EUR&symbols=GBP,USD"
+ECB_RATES = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
+RATES_URL = "https://api.frankfurter.dev/v1/latest?from=EUR&symbols=GBP,USD"   # backup (same ECB rates)
 
 COLUMNS = ["date", "card", "source", "product", "price", "low", "avg30"]
 
@@ -96,6 +103,19 @@ def round2(value):
 
 
 # ---------------- shared lookups ----------------
+def euro_rates():
+    """Pounds and dollars per 1 euro (European Central Bank daily reference rates)."""
+    try:
+        with get(ECB_RATES, timeout=30) as r:
+            xml = r.read().decode()
+        found = dict(re.findall(r"currency='([A-Z]{3})' rate='([0-9.]+)'", xml))
+        return {"EUR": float(found["GBP"]), "USD": float(found["USD"])}
+    except Exception:
+        data = get_json(RATES_URL, timeout=30)
+        return {"EUR": data["rates"]["GBP"], "USD": data["rates"]["USD"]}
+
+
+
 def ygoprodeck_sets(names, log):
     """Card name -> YGOPRODeck card_sets (set_name, set_code, set_rarity) for every printing."""
     out, names = {}, sorted(set(names))
@@ -290,8 +310,99 @@ def update_tcgplayer(cards, sets, state, matches, rates, log):
     return rows
 
 
+# ---------------- MTG booster boxes ----------------
+def tcg_box_name(box):
+    """TCGplayer: 'Bloomburrow - Play Booster Display'."""
+    return f"{box} booster display"
+
+
+def update_mtg_boxes(boxes, state, matches, rates, log, tcg_updated):
+    """TCGplayer and Cardmarket prices for MTG booster boxes. Returns rows for the history."""
+    rows = []
+    groups = get_json(f"{TCG_MTG}/groups")["results"]
+    by_code = {}
+    for g in groups:
+        if g.get("abbreviation"):
+            by_code.setdefault(g["abbreviation"].upper(), g)
+
+    def skip(name):
+        return re.search(r"\b(case|japanese|omega|sample|bundle)\b", name, re.I)
+
+    # TCGplayer
+    if tcg_updated and tcg_updated != state.get("tcgplayer_mtg"):
+        needed = sorted({by_code[b["set"]]["groupId"] for b in boxes if b["set"] in by_code})
+
+        def fetch(group_id):
+            return (group_id, get_json(f"{TCG_MTG}/{group_id}/products")["results"],
+                    get_json(f"{TCG_MTG}/{group_id}/prices")["results"])
+
+        products, prices = {}, collections.defaultdict(list)
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            for group_id, prods, prs in pool.map(fetch, needed):
+                products[group_id] = prods
+                for p in prs:
+                    prices[p["productId"]].append(p)
+        to_gbp = rates["EUR"] / rates["USD"]
+        day, matched = tcg_updated[:10], 0
+        for b in boxes:
+            group = by_code.get(b["set"])
+            found = [p for p in products.get(group["groupId"], []) if not skip(p["name"])
+                     and norm(p["name"]).endswith(norm(tcg_box_name(b["box"])))] if group else []
+            note = "" if len(found) == 1 else (f"set {b['set']} not on TCGplayer" if not group
+                                               else "no such box on TCGplayer" if not found else "several products")
+            product = found[0]["productId"] if len(found) == 1 else None
+            pr = next((x for x in prices.get(product, []) if x.get("marketPrice") or x.get("lowPrice")), None)
+            matches.setdefault(b["key"], {})["tcgplayer"] = {"product": product, "note": note if pr or note else "no TCGplayer price"}
+            if not pr:
+                continue
+            matched += 1
+            rows.append([day, b["key"], "tcgplayer", product,
+                         round2(pr["marketPrice"] * to_gbp) if pr.get("marketPrice") else None,
+                         round2(pr["lowPrice"] * to_gbp) if pr.get("lowPrice") else None, None])
+        log(f"references: TCGplayer MTG {day} - {matched} of {len(boxes)} boxes priced")
+        state["tcgplayer_mtg"] = tcg_updated
+
+    # Cardmarket
+    modified = get(CM_MTG_GUIDE, method="HEAD").headers.get("Last-Modified", "")
+    if not modified or modified != state.get("cardmarket_mtg"):
+        sealed = [p for p in get_json(CM_MTG_SEALED, timeout=180)["products"]
+                  if p.get("categoryName") == "Magic Display" and not skip(p["name"])]
+        guide = get_json(CM_MTG_GUIDE, timeout=300)
+        prices = {g["idProduct"]: g for g in guide["priceGuides"]}
+        day = guide.get("createdAt", "")[:10] or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        to_gbp, matched = rates["EUR"], 0
+        for b in boxes:
+            # Cardmarket: "Bloomburrow Play Booster Box", "Magic: The Gathering - FINAL FANTASY Play Booster Box"
+            set_names = [norm(n) for n in [b["name"]] + ([by_code[b["set"]]["name"]] if b["set"] in by_code else [])]
+            suffix = f"{b['box']} booster box"
+            best = {}   # product -> fewest extra words, over both spellings of the set name
+            for p in sealed:
+                name = norm(p["name"])
+                if not name.endswith(suffix):
+                    continue
+                words = set(name[: -len(suffix)].split())
+                for sn in set_names:
+                    if set(sn.split()) <= words:
+                        extra = len(words - set(sn.split()))
+                        best[p["idProduct"]] = min(extra, best.get(p["idProduct"], extra))
+            cands = sorted((extra, pid) for pid, extra in best.items())
+            # the closest name wins ("Foundations" over "Foundations Jumpstart"); a tie can't be decided
+            product = cands[0][1] if cands and (len(cands) == 1 or cands[0][0] < cands[1][0]) else None
+            note = "" if product else ("no such box on Cardmarket" if not cands else "several products on Cardmarket")
+            g = prices.get(product) if product else None
+            matches.setdefault(b["key"], {})["cardmarket"] = {"product": product, "note": note if g or note else "no Cardmarket price"}
+            if not g or (g.get("low") is None and g.get("trend") is None):
+                continue
+            matched += 1
+            conv = lambda v: round2(v * to_gbp) if v is not None else None
+            rows.append([day, b["key"], "cardmarket", product, conv(g.get("trend")), conv(g.get("low")), conv(g.get("avg30"))])
+        log(f"references: Cardmarket MTG {day} - {matched} of {len(boxes)} boxes priced")
+        state["cardmarket_mtg"] = modified
+    return rows
+
+
 # ---------------- entry point ----------------
-def update(cards, data_dir, overrides_file, log):
+def update(cards, data_dir, overrides_file, log, boxes=()):
     """Save today's Cardmarket and TCGplayer prices, if they changed since the last save."""
     history = data_dir / "reference_history.csv"
     state_file = data_dir / "reference_state.json"
@@ -300,14 +411,25 @@ def update(cards, data_dir, overrides_file, log):
     matches = json.loads(matches_file.read_text(encoding="utf-8")) if matches_file.exists() else {}
     cards = [c for c in cards if c["code"]]   # a line with only a card name has no single reference
 
-    data = get_json(RATES_URL)
-    rates = {"EUR": data["rates"]["GBP"], "USD": data["rates"]["USD"]}   # per 1 euro
+    try:
+        rates = euro_rates()   # per 1 euro
+        state["rates"] = rates
+    except Exception as e:     # rates barely move: use the last ones rather than lose a day
+        if "rates" not in state:
+            raise
+        rates = state["rates"]
+        log(f"references: exchange rates not loaded ({e}) - using the last saved ones")
     sets = ygoprodeck_sets([c["name"] for c in cards], log)
+
+    with get("https://tcgcsv.com/last-updated.txt") as r:
+        tcg_updated = r.read().decode().strip()
 
     rows = []
     for source, run in (("Cardmarket", lambda: update_cardmarket(cards, sets, state, matches, rates,
                                                                   load_overrides(overrides_file), log)),
-                        ("TCGplayer", lambda: update_tcgplayer(cards, sets, state, matches, rates, log))):
+                        ("TCGplayer", lambda: update_tcgplayer(cards, sets, state, matches, rates, log)),
+                        ("MTG boxes", lambda: update_mtg_boxes(list(boxes), state, matches, rates, log,
+                                                               tcg_updated) if boxes else [])):
         try:
             rows += run()
         except Exception as e:     # one source failing should not stop the other
@@ -316,7 +438,7 @@ def update(cards, data_dir, overrides_file, log):
         return
 
     data_dir.mkdir(parents=True, exist_ok=True)
-    keys = {c["key"] for c in cards}
+    keys = {c["key"] for c in list(cards) + list(boxes)}
     matches = {k: v for k, v in matches.items() if k in keys}
     new_file = not history.exists()
     with history.open("a", newline="", encoding="utf-8") as f:

@@ -1,6 +1,7 @@
 """
 eBay UK card price watcher (official eBay Browse API, no browser needed)
 - Reads card names from ebay_cards.txt (one per line, # for comments, [Section] headers)
+  and Magic: The Gathering booster boxes from mtg_boxes.txt (Telegram numbers B1, B2...)
 - Searches eBay UK for Buy It Now Yu-Gi-Oh! singles located in the United Kingdom
 - Only counts listings whose title contains the exact card name
 - Records the cheapest total price (item + postage), keeps a history of every change,
@@ -44,6 +45,7 @@ from pathlib import Path
 # ---------------- settings ----------------
 BASE_DIR = Path(__file__).resolve().parent   # files live next to this script, wherever it is run from
 CARDS_FILE = BASE_DIR / "ebay_cards.txt"
+BOXES_FILE = BASE_DIR / "mtg_boxes.txt"
 # saved prices + history go in DATA_DIR (GitHub Actions points this at the "data" branch folder)
 DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR))
 STATE_FILE = DATA_DIR / "ebay_prices.json"
@@ -59,6 +61,20 @@ RESULTS_PER_SEARCH = 200         # max allowed; many cheap results are other car
 EXCLUDE_WORDS = {"japanese", "korean", "chinese", "asian", "ocg", "proxy", "orica", "custom",
                  "replica", "fake", "psa", "bgs", "cgc", "graded", "empty", "bundle", "lot", "x3", "3x",
                  "sleeve", "sleeves", "playmat", "binder", "digital", "code", "poster"}
+
+# ---- MTG booster boxes (mtg_boxes.txt) ----
+# only sealed boxes: eBay condition "New", and titles with these words are skipped
+BOX_EXCLUDE_WORDS = {
+    "case", "cases", "opened", "unsealed", "resealed", "used", "omega", "jumpstart", "prerelease",
+    "draft", "commander", "deck", "decks", "starter", "sample", "topper", "x2", "2x", "x4", "4x",
+    # English only
+    "german", "deutsch", "french", "francais", "italian", "italiano", "spanish", "espanol",
+    "portuguese", "russian", "japanese", "japan", "jp", "jpn", "chinese", "korean",
+}
+BOX_EXCLUDE_PHRASES = ["no packs", "set booster", "collector booster pack", "play booster pack"]
+BOX_TYPE_WORDS = {"play": {"play"}, "collector": {"collector", "collectors"}}
+# a "box" cheaper than this is a single pack or a scam - also passed to eBay as a price filter
+BOX_MIN_PRICE = {"play": 50, "collector": 120}
 
 # "25th Anniversary Edition" reprints reuse the original set code (e.g. MRD-EN138, PSV-EN000).
 # A 4th column in ebay_cards.txt keeps them apart: "original" skips titles with these words,
@@ -130,9 +146,37 @@ def load_cards():
             label += f" · {code}" + (f" {RARITY_SHORT[rarity]}" if rarity else "")
         if edition == "25th":
             label += " (25th)"
-        cards.append({"section": section, "name": name, "code": code, "rarity": rarity,
-                      "edition": edition, "key": line, "label": label})
+        cards.append({"kind": "card", "num": str(len(cards) + 1), "section": section, "name": name,
+                      "code": code, "rarity": rarity, "edition": edition, "key": line, "label": label})
     return cards
+
+
+def load_boxes():
+    """MTG booster boxes: "Set name | SET | Play or Collector | eBay name / other eBay name"."""
+    if not BOXES_FILE.exists():
+        return []
+    boxes, section = [], ""
+    for line in BOXES_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            section = line[1:-1].strip()
+            continue
+        parts = [p.strip() for p in line.split("|")] + ["", "", ""]
+        name, set_code, box = parts[0], parts[1].upper(), parts[2].lower()
+        if box not in BOX_TYPE_WORDS:
+            sys.exit(f"Unknown box type '{parts[2]}' in: {line}  (use Play or Collector)")
+        ebay_names = [n.strip() for n in (parts[3] or name).split("/") if n.strip()]
+        boxes.append({"kind": "box", "num": f"B{len(boxes) + 1}", "section": section, "name": name,
+                      "set": set_code, "box": box, "ebay_names": ebay_names,
+                      "code": "", "rarity": "", "edition": "", "key": line,
+                      "label": f"{name} {box.title()} box"})
+    return boxes
+
+
+def load_all():
+    return load_cards() + load_boxes()
 
 
 # ---------------- set codes ----------------
@@ -279,17 +323,22 @@ def get_token():
     return _token["value"]
 
 
-def search(query):
+def search(query, category=CATEGORY_ID, min_price=None, new_only=False):
     filters = [f"itemLocationCountry:{ITEM_COUNTRY}", "priceCurrency:GBP"]
     if BUY_IT_NOW_ONLY:
         filters.append("buyingOptions:{FIXED_PRICE}")
+    if min_price:
+        filters.append(f"price:[{min_price}..]")
+    if new_only:
+        filters.append("conditions:{NEW}")
     params = {
         "q": query,
-        "category_ids": CATEGORY_ID,
         "filter": ",".join(filters),
         "sort": "price",          # cheapest first
         "limit": RESULTS_PER_SEARCH,
     }
+    if category:
+        params["category_ids"] = category
     req = urllib.request.Request(f"{SEARCH_URL}?{urllib.parse.urlencode(params)}", headers={
         "Authorization": f"Bearer {get_token()}",
         "X-EBAY-C-MARKETPLACE-ID": MARKETPLACE,
@@ -322,12 +371,46 @@ def listing_matches(title, entry):
     return title_matches(title, entry["name"])
 
 
+def box_listing_matches(title, entry):
+    """Title has one of the box's eBay names, its type (play/collector) and box/display - nothing else."""
+    words = set(words_of(title))
+    text = " ".join(words_of(title))
+    if (EXCLUDE_WORDS | BOX_EXCLUDE_WORDS) & words or any(p in text for p in BOX_EXCLUDE_PHRASES):
+        return False
+    if not any(contains_phrase(words_of(title), words_of(n)) for n in entry["ebay_names"]):
+        return False
+    if not {"box", "display"} & words:
+        return False
+    wanted = BOX_TYPE_WORDS[entry["box"]]
+    others = set().union(*(w for t, w in BOX_TYPE_WORDS.items() if t != entry["box"]))
+    return bool(wanted & words) and not others & words
+
+
+def cheapest_box(entry):
+    """MTG boxes: one search per eBay name, any category, sealed (New) only, above the pack price."""
+    type_query = "play" if entry["box"] == "play" else "(collector, collectors)"
+    items, seen = [], set()
+    for name in entry["ebay_names"]:
+        for item in search(f"{name} {type_query} booster", category=None,
+                           min_price=BOX_MIN_PRICE[entry["box"]], new_only=True):
+            if item.get("itemId") not in seen:
+                seen.add(item.get("itemId"))
+                items.append(item)
+    return cheapest_of(items, lambda title: box_listing_matches(title, entry))
+
+
 def cheapest_listing(entry):
-    best = None
+    if entry["kind"] == "box":
+        return cheapest_box(entry)
     query = code_query(entry["code"]) if entry["code"] else entry["name"]
-    for item in search(query):
+    return cheapest_of(search(query), lambda title: listing_matches(title, entry))
+
+
+def cheapest_of(items, matches):
+    best = None
+    for item in items:
         title = item.get("title", "")
-        if not listing_matches(title, entry):
+        if not matches(title):
             continue
         price = item.get("price") or {}
         if price.get("currency") != "GBP":
@@ -406,7 +489,8 @@ def answer_replies(state):
     if not updates:
         return
 
-    cards = load_cards()
+    cards = load_all()
+    by_num = {entry["num"]: entry for entry in cards}
     for update in updates:
         message = update.get("message") or {}
         if str((message.get("chat") or {}).get("id")) != chat:
@@ -416,17 +500,17 @@ def answer_replies(state):
             send_list(cards, state, text[4:].strip())
             log(f"Answered reply: {text}")
             continue
-        numbers = [int(n) for n in re.findall(r"\d+", text)]
+        numbers = [n.upper() for n in re.findall(r"\b[bB]?\d+\b", text)]
         if not numbers:
-            send_telegram("Reply with a number (e.g. 12, or 3 7 15) to get the eBay link.\n"
-                          "Reply 'list' for every card with its price, or e.g. 'list goat' for one section.")
+            send_telegram("Reply with a number (e.g. 12, or 3 7 15, or B4 for a booster box) to get the eBay link.\n"
+                          "Reply 'list' for everything, 'list cards', 'list boxes', or e.g. 'list goat' for one section.")
             continue
         lines = []
         for n in numbers[:10]:
-            if not 1 <= n <= len(cards):
-                lines.append(f"{n}: no card with that number (1–{len(cards)})")
+            entry = by_num.get(n)
+            if not entry:
+                lines.append(f"{n}: nothing with that number")
                 continue
-            entry = cards[n - 1]
             offer = state.get(entry["key"])
             if not offer:
                 lines.append(f"{n}. {entry['label']}: no listing found at the last check")
@@ -435,7 +519,7 @@ def answer_replies(state):
             lines.append(f"{n}. {entry['label']} — £{offer['price']:.2f} (at {checked})\n"
                          f"{offer['title']}\n{offer['url']}")
         send_telegram("\n\n".join(lines), preview=len(lines) == 1)
-        log(f"Answered reply: {numbers[:10]}")
+        log(f"Answered reply: {' '.join(numbers[:10])}")
 
     # tell Telegram these messages are handled, so they are not answered again next time
     try:
@@ -447,15 +531,20 @@ def answer_replies(state):
 def send_list(cards, state, section_filter=""):
     """Full numbered list with the latest prices, optionally only sections containing the filter word."""
     lines, section_shown = [], None
-    for number, entry in enumerate(cards, start=1):
-        if section_filter and section_filter.lower() not in entry["section"].lower():
+    word = section_filter.lower()
+    kinds = {"cards": "card", "card": "card", "yugioh": "card", "boxes": "box", "box": "box", "mtg": "box"}
+    for entry in cards:
+        if word in kinds:
+            if entry["kind"] != kinds[word]:
+                continue
+        elif word and word not in entry["section"].lower():
             continue
         if entry["section"] != section_shown:
             lines.append(f"\n{entry['section']}")
             section_shown = entry["section"]
         offer = state.get(entry["key"])
         price = f"£{offer['price']:.2f}" if offer else "none found"
-        lines.append(f"{number}. {entry['label']}: {price}")
+        lines.append(f"{entry['num']}. {entry['label']}: {price}")
     if not lines:
         send_telegram(f"No section matches '{section_filter}'.")
         return
@@ -482,18 +571,18 @@ def fetch_offer(entry):
 
 
 def run_pass(state):
-    cards = load_cards()
+    cards = load_all()
     get_token()
     for entry in cards:         # fill the card-name cache first (one file, so not in parallel)
-        if not entry["code"]:
+        if entry["kind"] == "card" and not entry["code"]:
             longer_names(entry["name"])
     with ThreadPoolExecutor(max_workers=PARALLEL_SEARCHES) as pool:
         results = list(pool.map(fetch_offer, cards))
 
     drops, rises, new, gone, errors = [], [], [], [], []
     found = 0
-    for number, (entry, (offer, error)) in enumerate(zip(cards, results), start=1):
-        label, key = entry["label"], entry["key"]
+    for entry, (offer, error) in zip(cards, results):
+        label, key, number = entry["label"], entry["key"], entry["num"]
         if error:
             errors.append(f"{number}. {label}: {error}")
             continue
@@ -507,7 +596,7 @@ def run_pass(state):
             continue
 
         found += 1
-        edition = " 1st" if offer["first_edition"] else ""
+        edition = " 1st" if entry["kind"] == "card" and offer["first_edition"] else ""
         if prev is None:
             new.append(f"{number}. {label}: £{offer['price']:.2f}{edition}")
         elif offer["price"] < prev["price"]:
@@ -528,11 +617,11 @@ def run_pass(state):
         if not items:
             continue
         if len(items) > 25:
-            lines.append(f"\n{title}: {len(items)} printings (reply 'list' to see them)")
+            lines.append(f"\n{title}: {len(items)} (reply 'list' to see them)")
         else:
             lines.append(f"\n{title}")
             lines.extend(items)
-    header = f"eBay check {datetime.now():%d %b %H:%M} — {found} of {len(cards)} printings listed\n"
+    header = f"eBay check {datetime.now():%d %b %H:%M} — {found} of {len(cards)} cards and boxes listed\n"
     if not lines:
         lines.append("\nNo price changes.")
     lines.append("\nReply a number for the link, or 'list' for all prices.")
@@ -542,7 +631,8 @@ def run_pass(state):
     if REFERENCES:
         try:
             import references
-            references.update(cards, DATA_DIR, CARDMARKET_IDS_FILE, log)
+            references.update([c for c in cards if c["kind"] == "card"], DATA_DIR, CARDMARKET_IDS_FILE, log,
+                              boxes=[c for c in cards if c["kind"] == "box"])
         except Exception as e:     # reference prices are extra - never stop the eBay check
             log(f"references: failed - {e}")
 
@@ -551,7 +641,18 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--once", action="store_true", help="run one pass and exit")
     ap.add_argument("--replies", action="store_true", help="only answer Telegram replies and exit")
+    ap.add_argument("--dry-run", choices=["cards", "boxes", "all"],
+                    help="search eBay and print the cheapest match for each line; saves and sends nothing")
     args = ap.parse_args()
+
+    if args.dry_run:
+        entries = {"cards": load_cards, "boxes": load_boxes, "all": load_all}[args.dry_run]()
+        get_token()
+        with ThreadPoolExecutor(max_workers=PARALLEL_SEARCHES) as pool:
+            for entry, (offer, error) in zip(entries, pool.map(fetch_offer, entries)):
+                result = error or (describe(offer) + f"\n      {offer['url']}" if offer else "no listing")
+                print(f"{entry['num']:>4}. {entry['label']}: {result}", flush=True)
+        return
 
     state = load_state()
     answer_replies(state)
