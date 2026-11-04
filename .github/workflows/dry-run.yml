@@ -24,7 +24,7 @@ jobs:
           python-version: "3.12"
 
       - name: Search eBay
-        run: python ebay_watch.py --dry-run "$WHAT"
+        run: python probe.py
         env:
           WHAT: ${{ inputs.what }}
           DATA_DIR: dry-run-data
