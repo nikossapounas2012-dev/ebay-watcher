@@ -2,6 +2,8 @@
 #   - a listing counts if its title has the card name (and not a longer card name that contains it),
 #     says foil for Foil lines (and not foil / says non-foil for Standard lines),
 #     and doesn't name a different set
+# Alert price (optional): add "| £90" at the end of a line and Telegram messages you when it is listed
+#   at or under £90. Adding or changing it keeps the line's history and number.
 # The number in Telegram is S + the line's position (S1, S2...) - add new lines at the END to keep numbers.
 # Generated from the official Sorcery card database (api.sorcerytcg.com): every Unique printed in
 #   Gothic, Arthurian Legends and Dragonlord, in each finish it exists in.

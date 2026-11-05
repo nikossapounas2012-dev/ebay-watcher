@@ -4,6 +4,8 @@
 #   - 'original' skips 25th/20th Anniversary reprints that reuse the same code, '25th' only counts them
 #   - a line with just a card name watches the cheapest copy of any printing
 # Rarities: Secret Rare, Ultra Rare, Ultimate Rare, Ghost Rare, Ghost/Gold Rare
+# Alert price (optional): add "| £90" at the end of a line and Telegram messages you when it is listed
+#   at or under £90. Adding or changing it keeps the line's history and number.
 # The number in Telegram is the line's position (from 1) - add new lines at the END to keep numbers.
 # Generated from YGOPRODeck: every English Secret/Ultra/Ultimate/Ghost printing, oldest set first.
 # No English Secret/Ultra/Ultimate/Ghost printing exists for: Magical Merchant, Tribe-Infecting Virus,

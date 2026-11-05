@@ -5,6 +5,8 @@
 #     e.g. "alpha/frazetta -beta": only Alpha has Frazetta's art; the Beta printings have other artists
 #   - TCGplayer: category/group/product   Cardmarket: game/product   (empty = no reference price)
 #     These are exact product numbers (from Scryfall, TCGplayer and Cardmarket), so no guessing.
+# Alert price (optional): add "| £90" at the end of a line and Telegram messages you when it is listed
+#   at or under £90. Adding or changing it keeps the line's history and number.
 # The number in Telegram is F + the line's position (F1, F2...) - add new lines at the END to keep numbers.
 # MTG cards come from Scryfall (artist "Frank Frazetta"), Sorcery cards from the official card database.
 

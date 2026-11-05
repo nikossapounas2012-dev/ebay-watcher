@@ -203,6 +203,15 @@ async function getText(path) {
   return r.text();
 }
 
+// "| £90" on a line is a Telegram alert price, not part of the line's key (split_target() in ebay_watch.py)
+function splitTarget(line) {
+  const m = /\s*\|\s*(?:max\s*)?£\s*(\d+(?:\.\d+)?)\s*(?=\||$)/i.exec(line);
+  if (!m) return [line, null];
+  return [(line.slice(0, m.index) + line.slice(m.index + m[0].length)).split("|").map((s) => s.trim()).join(" | "),
+          parseFloat(m[1])];
+}
+const withTarget = (meta, target) => (target ? `${meta} · alert at £${target}` : meta);
+
 // same rules as load_cards() in ebay_watch.py, so the numbers match Telegram
 function parseCards(text) {
   const out = []; let section = "";
@@ -210,12 +219,13 @@ function parseCards(text) {
     line = line.trim();
     if (!line || line.startsWith("#")) continue;
     if (line.startsWith("[") && line.endsWith("]")) { section = line.slice(1, -1).trim(); continue; }
+    let target; [line, target] = splitTarget(line);
     const p = line.split("|").map((s) => s.trim()).concat(["", "", ""]);
     const name = p[0], code = p[1].toUpperCase(), rarity = p[2].toLowerCase(), edition = p[3].toLowerCase();
     const short = RARITY_SHORT[rarity] || p[2];
     out.push({ n: String(out.length + 1), kind: "card", section, name, code, rarity: short, edition, key: line,
-               meta: [code, short, edition === "25th" ? "25th Anniversary" : edition === "original" ? "original print" : ""]
-                 .filter(Boolean).join(" · ") || "any printing" });
+               meta: withTarget([code, short, edition === "25th" ? "25th Anniversary" : edition === "original" ? "original print" : ""]
+                 .filter(Boolean).join(" · ") || "any printing", target) });
   }
   return out;
 }
@@ -227,11 +237,12 @@ function parseFrazetta(text) {
     line = line.trim();
     if (!line || line.startsWith("#")) continue;
     if (line.startsWith("[") && line.endsWith("]")) { section = line.slice(1, -1).trim(); continue; }
+    let target; [line, target] = splitTarget(line);
     const p = line.split("|").map((s) => s.trim()).concat(["", "", "", ""]);
     const foil = p[3].toLowerCase() === "foil";
     out.push({ n: "F" + (out.length + 1), kind: "frazetta", game: p[0], section, name: p[1], code: p[2],
                rarity: foil ? "Foil" : "Standard", edition: "", key: line,
-               meta: `${p[0]} · ${p[2]} · ${foil ? "Foil" : "Standard"}` });
+               meta: withTarget(`${p[0]} · ${p[2]} · ${foil ? "Foil" : "Standard"}`, target) });
   }
   return out;
 }
@@ -243,10 +254,11 @@ function parseSorcery(text) {
     line = line.trim();
     if (!line || line.startsWith("#")) continue;
     if (line.startsWith("[") && line.endsWith("]")) { section = line.slice(1, -1).trim(); continue; }
+    let target; [line, target] = splitTarget(line);
     const p = line.split("|").map((s) => s.trim()).concat(["", ""]);
     const foil = p[2].toLowerCase() === "foil";
     out.push({ n: "S" + (out.length + 1), kind: "sorcery", section, name: p[0], code: p[1], rarity: foil ? "Foil" : "Standard",
-               edition: "", key: line, meta: `${p[1]} · Unique · ${foil ? "Foil" : "Standard"}` });
+               edition: "", key: line, meta: withTarget(`${p[1]} · Unique · ${foil ? "Foil" : "Standard"}`, target) });
   }
   return out;
 }
@@ -258,10 +270,11 @@ function parseBoxes(text) {
     line = line.trim();
     if (!line || line.startsWith("#")) continue;
     if (line.startsWith("[") && line.endsWith("]")) { section = line.slice(1, -1).trim(); continue; }
+    let target; [line, target] = splitTarget(line);
     const p = line.split("|").map((s) => s.trim()).concat(["", "", ""]);
     const box = p[2].toLowerCase() === "play" ? "Play" : "Collector";
     out.push({ n: "B" + (out.length + 1), kind: "box", section, name: p[0], code: p[1].toUpperCase(), rarity: box,
-               edition: "", key: line, meta: `${p[1].toUpperCase()} · ${box} booster box` });
+               edition: "", key: line, meta: withTarget(`${p[1].toUpperCase()} · ${box} booster box`, target) });
   }
   return out;
 }

@@ -18,8 +18,9 @@ Setup:
 
 Telegram (set as environment variables):
     TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
-    - a numbered summary is sent after every pass (turn off with TELEGRAM_EVERY_RUN = False)
-    - price drops are listed at the top of the summary
+    - a message is sent only for alerts: under your target price ("| £90" on a line), 20%+ under
+      market, or a new lowest ever (set ALERTS_ONLY = False for every price change)
+    - reply 'deals' for everything at/under target or under market right now
     - reply with a number (e.g. "12" or "3 7 15") to get the eBay link(s)
 
 Run:
@@ -133,7 +134,17 @@ YGOPRODECK_URL = "https://db.ygoprodeck.com/api/v7/cardinfo.php"
 REFERENCES = True
 CARDMARKET_IDS_FILE = BASE_DIR / "cardmarket_ids.txt"
 
-TELEGRAM_EVERY_RUN = True        # send a summary to Telegram after every pass
+# Telegram only messages when something is worth buying (an "alert"), when a listing gets cheaper and:
+#   - it is at or under the target price on its line ("| £90" anywhere after the name), or
+#   - it is DEAL or less of the market price (Cardmarket trend; boxes, Sorcery and Frazetta also
+#     TCGplayer, which is matched to the exact product there - Yu-Gi-Oh! TCGplayer prices are often
+#     for another edition), or
+#   - it is at least LOWEST_MIN_DROP under the lowest price ever recorded for it
+#   The last two only for things worth ALERT_MIN_PRICE or more, so cheap cards don't flood the chat.
+ALERTS_ONLY = True               # False = also send every price change after every pass (the old summary)
+DEAL = 0.8                       # 0.8 = 20% or more under the market price
+LOWEST_MIN_DROP = 0.10           # 10% under the lowest ever (so a few pence cheaper doesn't alert)
+ALERT_MIN_PRICE = 10.0           # £
 CHECK_INTERVAL_MIN = 30          # minutes between full passes (only when looping locally)
 PARALLEL_SEARCHES = 5            # eBay searches at the same time (GitHub bills every started minute)
 DELAY_BETWEEN_CARDS = (0.2, 0.6) # seconds, random pause before each search
@@ -163,6 +174,7 @@ def load_cards():
         if line.startswith("[") and line.endswith("]"):
             section = line[1:-1].strip()
             continue
+        line, target = split_target(line)   # "| £90" = alert at or under £90
         parts = [p.strip() for p in line.split("|")] + ["", "", ""]
         name, code, rarity, edition = parts[0], parts[1].upper(), parts[2].lower(), parts[3].lower()
         if rarity and rarity not in RARITY_WORDS:
@@ -175,7 +187,7 @@ def load_cards():
         if edition == "25th":
             label += " (25th)"
         cards.append({"kind": "card", "num": str(len(cards) + 1), "section": section, "name": name,
-                      "code": code, "rarity": rarity, "edition": edition, "key": line, "label": label})
+                      "code": code, "rarity": rarity, "edition": edition, "key": line, "target": target, "label": label})
     return cards
 
 
@@ -191,6 +203,7 @@ def load_boxes():
         if line.startswith("[") and line.endswith("]"):
             section = line[1:-1].strip()
             continue
+        line, target = split_target(line)   # "| £90" = alert at or under £90
         parts = [p.strip() for p in line.split("|")] + ["", "", ""]
         name, set_code, box = parts[0], parts[1].upper(), parts[2].lower()
         if box not in BOX_TYPE_WORDS:
@@ -198,7 +211,7 @@ def load_boxes():
         ebay_names = [n.strip() for n in (parts[3] or name).split("/") if n.strip()]
         boxes.append({"kind": "box", "num": f"B{len(boxes) + 1}", "section": section, "name": name,
                       "set": set_code, "box": box, "ebay_names": ebay_names,
-                      "code": "", "rarity": "", "edition": "", "key": line,
+                      "code": "", "rarity": "", "edition": "", "key": line, "target": target,
                       "label": f"{name} {box.title()} box"})
     return boxes
 
@@ -215,13 +228,14 @@ def load_sorcery():
         if line.startswith("[") and line.endswith("]"):
             section = line[1:-1].strip()
             continue
+        line, target = split_target(line)   # "| £90" = alert at or under £90
         parts = [p.strip() for p in line.split("|")] + ["", ""]
         name, set_name, finish = parts[0], parts[1], parts[2].lower()
         if set_name not in SORCERY_SET_WORDS or finish not in ("standard", "foil"):
             sys.exit(f"Check this line in {SORCERY_FILE.name}: {line}  (set: {', '.join(SORCERY_SET_WORDS)}; Standard or Foil)")
         entries.append({"kind": "sorcery", "num": f"S{len(entries) + 1}", "section": section, "name": name,
                         "set": set_name, "foil": finish == "foil", "code": "", "rarity": "", "edition": "",
-                        "key": line, "label": f"{name} ({set_name}{', foil' if finish == 'foil' else ''})"})
+                        "key": line, "target": target, "label": f"{name} ({set_name}{', foil' if finish == 'foil' else ''})"})
     return entries
 
 
@@ -237,6 +251,7 @@ def load_frazetta():
         if line.startswith("[") and line.endswith("]"):
             section = line[1:-1].strip()
             continue
+        line, target = split_target(line)   # "| £90" = alert at or under £90
         parts = [p.strip() for p in line.split("|")] + ["", "", "", ""]
         game, name, printing, finish, words = parts[0], parts[1], parts[2], parts[3].lower(), parts[4]
         if game not in ("MTG", "Sorcery") or finish not in ("standard", "foil"):
@@ -247,13 +262,76 @@ def load_frazetta():
                         "want": [w.lower() for t in tokens if not t.startswith("-") for w in t.split("/") if w],
                         "avoid": [t[1:].lower() for t in tokens if t.startswith("-")],
                         "tcgplayer": parts[5], "cardmarket": parts[6],
-                        "code": "", "rarity": "", "edition": "", "key": line,
+                        "code": "", "rarity": "", "edition": "", "key": line, "target": target,
                         "label": f"{name} ({game} {printing}{', foil' if finish == 'foil' else ''})"})
     return entries
 
 
 def load_all():
     return load_cards() + load_boxes() + load_sorcery() + load_frazetta()
+
+
+TARGET_RE = re.compile(r"\s*\|\s*(?:max\s*)?£\s*(\d+(?:\.\d+)?)\s*(?=\||$)", re.I)
+
+
+def split_target(line):
+    """'Bloomburrow | BLB | Play | £200' -> ('Bloomburrow | BLB | Play', 200.0).
+    The target is left out of the line's key, so adding or changing one keeps the item's history."""
+    m = TARGET_RE.search(line)
+    if not m:
+        return line, None
+    return " | ".join(p.strip() for p in (line[:m.start()] + line[m.end():]).split("|")), float(m.group(1))
+
+
+def lowest_ever():
+    """Lowest eBay price recorded for each line, from the history file."""
+    lows = {}
+    if HISTORY_FILE.exists():
+        with HISTORY_FILE.open(newline="", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                if row["price"]:
+                    price = float(row["price"])
+                    lows[row["card"]] = min(price, lows.get(row["card"], price))
+    return lows
+
+
+def market_prices(entries):
+    """Latest market price per line: Cardmarket trend, else TCGplayer (not for Yu-Gi-Oh! cards).
+    Returns {key: (price in £, "Cardmarket" or "TCGplayer")}."""
+    kinds = {e["key"]: e["kind"] for e in entries}
+    latest = {}
+    path = DATA_DIR / "reference_history.csv"
+    if path.exists():
+        with path.open(newline="", encoding="utf-8") as f:
+            for row in csv.DictReader(f):      # oldest first, so later rows win
+                latest.setdefault(row["card"], {})[row["source"]] = float(row["price"]) if row["price"] else None
+    out = {}
+    for key, sources in latest.items():
+        for source, label in (("cardmarket", "Cardmarket"), ("tcgplayer", "TCGplayer")):
+            if source == "tcgplayer" and kinds.get(key, "card") == "card":
+                continue
+            if sources.get(source):
+                out[key] = (sources[source], label)
+                break
+    return out
+
+
+def alert_reasons(entry, offer, prev, lows, markets):
+    """Why this listing is worth a message (empty list = no alert). Only when it got cheaper or is new,
+    so the same listing at the same price never alerts twice."""
+    price = offer["price"]
+    if prev is not None and price >= prev["price"]:
+        return []
+    reasons = []
+    if entry.get("target") and price <= entry["target"]:
+        reasons.append(f"🎯 at/under your £{entry['target']:g}")
+    market = markets.get(entry["key"])
+    if market and market[0] >= ALERT_MIN_PRICE and price <= DEAL * market[0]:
+        reasons.append(f"💰 {1 - price / market[0]:.0%} under {market[1]} £{market[0]:.2f}")
+    low = lows.get(entry["key"])
+    if low is not None and low >= ALERT_MIN_PRICE and price <= low * (1 - LOWEST_MIN_DROP):
+        reasons.append(f"📉 lowest ever (before: £{low:.2f})")
+    return reasons
 
 
 # ---------------- set codes ----------------
@@ -731,6 +809,10 @@ def answer_replies(state):
         if str((message.get("chat") or {}).get("id")) != chat:
             continue   # only answer you, not anyone else who finds the bot
         text = message.get("text", "").strip()
+        if text.lower().strip() in ("deals", "deal", "alerts"):
+            send_deals(cards, state)
+            log(f"Answered reply: {text}")
+            continue
         if text.lower().startswith("list"):
             send_list(cards, state, text[4:].strip())
             log(f"Answered reply: {text}")
@@ -740,7 +822,8 @@ def answer_replies(state):
             send_telegram("Reply with a number (e.g. 12, or 3 7 15, B4 for a booster box, S20 for a Sorcery Unique, "
                           "F3 for Frazetta art) "
                           "to get the eBay link.\nReply 'list' for everything, 'list cards', 'list boxes', "
-                          "'list sorcery', 'list frazetta', or e.g. 'list goat' for one section.")
+                          "'list sorcery', 'list frazetta', or e.g. 'list goat' for one section.\n"
+                          "Reply 'deals' for everything at/under its target price or 20%+ under market.")
             continue
         lines = []
         for n in numbers[:10]:
@@ -789,6 +872,28 @@ def send_list(cards, state, section_filter=""):
     send_long("Latest prices\n", lines + ["\nReply with a number for the eBay link."])
 
 
+def send_deals(cards, state):
+    """Everything listed now at/under its target or DEAL or less of the market price, best deal first."""
+    markets, rows = market_prices(cards), []
+    for entry in cards:
+        offer = state.get(entry["key"])
+        if not offer:
+            continue
+        reasons, price = [], offer["price"]
+        if entry.get("target") and price <= entry["target"]:
+            reasons.append(f"🎯 £{entry['target']:g}")
+        market = markets.get(entry["key"])
+        ratio = price / market[0] if market else 1
+        if market and market[0] >= ALERT_MIN_PRICE and ratio <= DEAL:
+            reasons.append(f"💰 {1 - ratio:.0%} under {market[1]} £{market[0]:.2f}")
+        if reasons:
+            rows.append((ratio, f"{entry['num']}. {entry['label']}: £{price:.2f} · {' · '.join(reasons)}"))
+    if not rows:
+        send_telegram("Nothing is at/under its target or 20%+ under market right now.")
+        return
+    send_long(f"{len(rows)} deals now\n", [r for _, r in sorted(rows)] + ["\nReply a number for the link."])
+
+
 def describe(offer):
     postage = "postage unknown" if offer["postage"] is None else f"incl. £{offer['postage']:.2f} postage"
     return f"£{offer['price']:.2f} ({postage}) — {offer['title']} [{offer['seller']}]"
@@ -824,8 +929,9 @@ def run_pass(state):
     by_key.update(zip((c["key"] for c in frazetta), frazetta_results(frazetta, pool)))
     results = [by_key[c["key"]] for c in cards]
 
-    drops, rises, new, gone, errors = [], [], [], [], []
+    drops, rises, new, gone, errors, alerts = [], [], [], [], [], []
     found = 0
+    lows, markets = lowest_ever(), market_prices(cards)
     for entry, (offer, error) in zip(cards, results):
         label, key, number = entry["label"], entry["key"], entry["num"]
         if error:
@@ -849,29 +955,42 @@ def run_pass(state):
         elif offer["price"] > prev["price"]:
             rises.append(f"{number}. {label}: £{offer['price']:.2f}{edition} (was £{prev['price']:.2f})")
         log(f"{label}: {describe(offer)}")
+        reasons = alert_reasons(entry, offer, prev, lows, markets)
+        if reasons:
+            was = f" (was £{prev['price']:.2f})" if prev else ""
+            alerts.append(f"{number}. {label}: £{offer['price']:.2f}{edition}{was}\n"
+                          f"   {' · '.join(reasons)}\n   {offer['url']}")
         if prev is None or offer["price"] != prev["price"]:
             add_history(key, offer, prev)
         offer["checked"] = datetime.now().isoformat(timespec="seconds")
         state[key] = offer
     save_state(state)
 
-    # only changes are sent - reply "list" for everything
-    lines = []
-    for title, items in (("🔻 Price drops", drops), ("🔺 Price rises", rises),
-                         ("🆕 Now listed", new), ("❌ No longer listed", gone), ("⚠️ Errors", errors)):
-        if not items:
-            continue
-        if len(items) > 25:
-            lines.append(f"\n{title}: {len(items)} (reply 'list' to see them)")
+    when = f"{datetime.now():%d %b %H:%M}"
+    if ALERTS_ONLY:
+        # only alerts (and errors) are sent; the website and 'list' have everything else
+        if alerts or errors:
+            lines = ([f"\n{a}" for a in alerts]
+                     + ([f"\n⚠️ Errors: {len(errors)}"] + errors[:10] if errors else [])
+                     + ["\nReply a number for details, 'deals' for everything under market or target."])
+            send_long(f"🔔 eBay {when} — {len(alerts)} alert{'s' * (len(alerts) != 1)}\n", lines)
         else:
-            lines.append(f"\n{title}")
-            lines.extend(items)
-    header = f"eBay check {datetime.now():%d %b %H:%M} — {found} of {len(cards)} listed\n"
-    if not lines:
-        lines.append("\nNo price changes.")
-    lines.append("\nReply a number for the link, or 'list' for all prices.")
-    if TELEGRAM_EVERY_RUN or drops:
-        send_long(header, lines)
+            log(f"No alerts ({len(drops)} drops, {len(new)} new) - nothing sent to Telegram")
+    else:
+        lines = ([f"\n🔔 Alerts"] + alerts if alerts else [])
+        for title, items in (("🔻 Price drops", drops), ("🔺 Price rises", rises),
+                             ("🆕 Now listed", new), ("❌ No longer listed", gone), ("⚠️ Errors", errors)):
+            if not items:
+                continue
+            if len(items) > 25:
+                lines.append(f"\n{title}: {len(items)} (reply 'list' to see them)")
+            else:
+                lines.append(f"\n{title}")
+                lines.extend(items)
+        if not lines:
+            lines.append("\nNo price changes.")
+        lines.append("\nReply a number for the link, or 'list' for all prices.")
+        send_long(f"eBay check {when} — {found} of {len(cards)} listed\n", lines)
 
     if REFERENCES:
         try:

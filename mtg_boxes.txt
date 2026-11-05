@@ -5,6 +5,8 @@
 #   - a listing counts if its title has the eBay name, the box type and "box" or "display"
 #   - only sealed (eBay condition "New") English boxes count: cases, single packs, Omega boxes,
 #     opened boxes and listings naming another language are skipped
+# Alert price (optional): add "| £90" at the end of a line and Telegram messages you when it is listed
+#   at or under £90. Adding or changing it keeps the line's history and number.
 # The number in Telegram is B + the line's position (B1, B2...) - add new lines at the END to keep numbers.
 # Generated from TCGplayer: every set with a Play Booster box since Murders at Karlov Manor (Feb 2024).
 
