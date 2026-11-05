@@ -145,6 +145,11 @@ ALERTS_ONLY = True               # False = also send every price change after ev
 DEAL = 0.8                       # 0.8 = 20% or more under the market price
 LOWEST_MIN_DROP = 0.10           # 10% under the lowest ever (so a few pence cheaper doesn't alert)
 ALERT_MIN_PRICE = 10.0           # £
+
+# eBay allows 5,000 searches a day and one check uses ~330, so a check started less than this long after
+# the last one is skipped (e.g. a duplicate cron-job.org job). --force runs it anyway.
+MIN_GAP_MIN = 100
+LAST_CHECK_FILE = DATA_DIR / "last_check.txt"
 CHECK_INTERVAL_MIN = 30          # minutes between full passes (only when looping locally)
 PARALLEL_SEARCHES = 5            # eBay searches at the same time (GitHub bills every started minute)
 DELAY_BETWEEN_CARDS = (0.2, 0.6) # seconds, random pause before each search
@@ -971,7 +976,9 @@ def run_pass(state):
         # only alerts (and errors) are sent; the website and 'list' have everything else
         if alerts or errors:
             lines = ([f"\n{a}" for a in alerts]
-                     + ([f"\n⚠️ Errors: {len(errors)}"] + errors[:10] if errors else [])
+                     + (["\n⚠️ eBay's daily search limit is used up - no prices until it resets (08:00 UK)"]
+                        if errors and all("429" in e for e in errors)
+                        else [f"\n⚠️ Errors: {len(errors)}"] + errors[:10] if errors else [])
                      + ["\nReply a number for details, 'deals' for everything under market or target."])
             send_long(f"🔔 eBay {when} — {len(alerts)} alert{'s' * (len(alerts) != 1)}\n", lines)
         else:
@@ -1003,10 +1010,25 @@ def run_pass(state):
             log(f"references: failed - {e}")
 
 
+def too_soon():
+    """True if the last check started less than MIN_GAP_MIN minutes ago."""
+    try:
+        last = datetime.fromisoformat(LAST_CHECK_FILE.read_text().strip())
+    except (OSError, ValueError):
+        return False
+    minutes = (datetime.now() - last).total_seconds() / 60
+    if minutes < MIN_GAP_MIN:
+        log(f"Skipped: the last check was {minutes:.0f} min ago (less than {MIN_GAP_MIN}). "
+            "Probably a duplicate start - use --force to check anyway.")
+        return True
+    return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--once", action="store_true", help="run one pass and exit")
     ap.add_argument("--replies", action="store_true", help="only answer Telegram replies and exit")
+    ap.add_argument("--force", action="store_true", help="check even if the last check was recent")
     ap.add_argument("--dry-run", choices=["cards", "boxes", "sorcery", "frazetta", "all"],
                     help="search eBay and print the cheapest match for each line; saves and sends nothing")
     args = ap.parse_args()
@@ -1044,6 +1066,10 @@ def main():
         sys.exit(1 if telegram_failed else 0)
 
     while True:
+        if args.once and not args.force and too_soon():
+            break
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        LAST_CHECK_FILE.write_text(datetime.now().isoformat(timespec="seconds"))
         run_pass(state)
         if args.once:
             if telegram_failed:

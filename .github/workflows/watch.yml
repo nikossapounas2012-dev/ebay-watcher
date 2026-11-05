@@ -5,6 +5,11 @@ name: eBay price watch
 # so don't add a GitHub schedule as well - late duplicate runs would go over the limit.
 on:
   workflow_dispatch:          # cron-job.org calls this; also the "Run workflow" button
+    inputs:
+      force:
+        description: "Check even if the last check was less than 100 minutes ago"
+        type: boolean
+        default: false
 
 permissions:
   contents: write            # needed to save prices + history to the "data" branch
@@ -39,7 +44,7 @@ jobs:
           fi
 
       - name: Check prices
-        run: python ebay_watch.py --once
+        run: python ebay_watch.py --once ${{ inputs.force && '--force' || '' }}
         env:
           DATA_DIR: data
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
