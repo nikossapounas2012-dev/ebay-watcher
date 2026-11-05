@@ -1,11 +1,10 @@
 name: eBay price watch
 
+# Started every 2 hours at :17 by cron-job.org (GitHub's own schedule skipped most runs).
+# ~260 card + ~50 box + ~20 Sorcery searches x 12 runs = ~4,000 eBay searches a day (eBay allows 5,000),
+# so don't add a GitHub schedule as well - late duplicate runs would go over the limit.
 on:
-  schedule:
-    # every 2 hours at :17 (UTC). ~260 printings + ~50 box searches x 12 runs = ~3,800 eBay searches a day
-    # (eBay allows 5,000). GitHub often starts a few minutes late.
-    - cron: "17 */2 * * *"
-  workflow_dispatch:          # adds a "Run workflow" button to run it by hand
+  workflow_dispatch:          # cron-job.org calls this; also the "Run workflow" button
 
 permissions:
   contents: write            # needed to save prices + history to the "data" branch
