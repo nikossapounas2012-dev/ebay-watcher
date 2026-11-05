@@ -9,7 +9,7 @@ on:
       what:
         description: "Which list to search"
         type: choice
-        options: [boxes, sorcery, cards, all]
+        options: [frazetta, boxes, sorcery, cards, all]
         default: boxes
 
 jobs:

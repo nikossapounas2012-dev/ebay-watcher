@@ -1,0 +1,48 @@
+# Frank Frazetta artwork in Magic: The Gathering and Sorcery: Contested Realm, one printing per line:
+#   Game | Card name | Printing | Standard or Foil | eBay words | TCGplayer | Cardmarket
+#   - a listing counts if its title has the card name, the right finish (foil / not foil), and one of the
+#     eBay words (separated by /). "-word" means the title must NOT have that word.
+#     e.g. "alpha/frazetta -beta": only Alpha has Frazetta's art; the Beta printings have other artists
+#   - TCGplayer: category/group/product   Cardmarket: game/product   (empty = no reference price)
+#     These are exact product numbers (from Scryfall, TCGplayer and Cardmarket), so no guessing.
+# The number in Telegram is F + the line's position (F1, F2...) - add new lines at the END to keep numbers.
+# MTG cards come from Scryfall (artist "Frank Frazetta"), Sorcery cards from the official card database.
+
+[Magic: The Gathering]
+MTG | Field Marshal | Secret Lair 1168 | Standard | frazetta | 1/2576/456567 | 1/688272
+MTG | Field Marshal | Secret Lair 1168 | Foil | frazetta | 1/2576/456567 | 1/688272
+MTG | Temporal Manipulation | Secret Lair 1169 | Standard | frazetta | 1/2576/456565 | 1/688277
+MTG | Temporal Manipulation | Secret Lair 1169 | Foil | frazetta | 1/2576/456565 | 1/688277
+MTG | Dark Ritual | Secret Lair 1170 | Standard | frazetta | 1/2576/456562 | 1/688249
+MTG | Dark Ritual | Secret Lair 1170 | Foil | frazetta | 1/2576/456562 | 1/688249
+MTG | Midnight Reaper | Secret Lair 1171 | Standard | frazetta | 1/2576/456561 | 1/688244
+MTG | Midnight Reaper | Secret Lair 1171 | Foil | frazetta | 1/2576/456561 | 1/688244
+MTG | Seize the Day | Secret Lair 1172 | Standard | frazetta | 1/2576/456558 | 1/688331
+MTG | Seize the Day | Secret Lair 1172 | Foil | frazetta | 1/2576/456558 | 1/688331
+MTG | Lightning Strike | Secret Lair 724 | Standard | frazetta | 1/2576/477319 | 1/701170
+MTG | Lightning Strike | Secret Lair 724 | Foil | frazetta | 1/2576/477319 | 1/701170
+MTG | Deadly Dispute | Secret Lair 1980 | Standard | frazetta | 1/2576/637703 | 1/829806
+MTG | Deadly Dispute | Secret Lair 1980 | Foil | frazetta | 1/2576/637704 | 1/829806
+MTG | Murderous Rider | Secret Lair 1981 | Standard | frazetta | 1/2576/637707 | 1/829807
+MTG | Murderous Rider | Secret Lair 1981 | Foil | frazetta | 1/2576/637708 | 1/829807
+MTG | Zulaport Cutthroat | Secret Lair 1982 | Standard | frazetta | 1/2576/637709 | 1/829808
+MTG | Zulaport Cutthroat | Secret Lair 1982 | Foil | frazetta | 1/2576/637710 | 1/829808
+MTG | Aggravated Assault | Secret Lair 1983 | Standard | frazetta | 1/2576/637701 | 1/829809
+MTG | Aggravated Assault | Secret Lair 1983 | Foil | frazetta | 1/2576/637702 | 1/829809
+MTG | Desperate Ritual | Secret Lair 1984 | Standard | frazetta | 1/2576/637705 | 1/829810
+MTG | Desperate Ritual | Secret Lair 1984 | Foil | frazetta | 1/2576/637706 | 1/829810
+
+[Sorcery: Contested Realm]
+Sorcery | Death Dealer | Alpha | Standard | alpha/frazetta -beta | 77/23335/521562 | 25/910843
+Sorcery | Death Dealer | Alpha | Foil | alpha/frazetta -beta | 77/23335/521665 | 25/910843
+Sorcery | Courtesan Thaïs | Alpha | Standard | alpha/frazetta -beta | 77/23335/522109 | 25/910831
+Sorcery | Courtesan Thaïs | Alpha | Foil | alpha/frazetta -beta | 77/23335/522119 | 25/910831
+Sorcery | Ruler of Thul | Alpha | Standard | alpha/frazetta -beta | 77/23335/522301 | 25/911374
+Sorcery | Ruler of Thul | Alpha | Foil | alpha/frazetta -beta | 77/23335/522302 | 25/911374
+Sorcery | Vile Imp | Alpha | Standard | alpha/frazetta -beta | 77/23335/522446 | 25/911463
+Sorcery | Vile Imp | Alpha | Foil | alpha/frazetta -beta | 77/23335/522451 | 25/911463
+Sorcery | Headless Haunt | Promo (Buy-a-Box) | Foil | frazetta/promo | 77/23336/528811 | 25/912790
+Sorcery | Occult Ritual | Promo (Kickstarter) | Standard | frazetta/kickstarter/pledge | 77/23335/530297 | 25/912797
+Sorcery | Witherwing Hero | Promo (Alpha Investments) | Foil | frazetta/promo | 77/23336/528833 | 25/912837
+Sorcery | Sorcerer | Promo (Organized Play) | Foil | frazetta | |
+Sorcery | Witch | Promo (Alpha Investments) | Foil | frazetta | |

@@ -3,6 +3,7 @@ eBay UK card price watcher (official eBay Browse API, no browser needed)
 - Reads card names from ebay_cards.txt (one per line, # for comments, [Section] headers)
   and Magic: The Gathering booster boxes from mtg_boxes.txt (Telegram numbers B1, B2...)
   and Sorcery: Contested Realm Unique cards from sorcery_uniques.txt (Telegram numbers S1, S2...)
+  and Frank Frazetta artwork in MTG and Sorcery from frazetta.txt (Telegram numbers F1, F2...)
 - Searches eBay UK for Buy It Now Yu-Gi-Oh! singles located in the United Kingdom
 - Only counts listings whose title contains the exact card name
 - Records the cheapest total price (item + postage), keeps a history of every change,
@@ -49,6 +50,7 @@ BASE_DIR = Path(__file__).resolve().parent   # files live next to this script, w
 CARDS_FILE = BASE_DIR / "ebay_cards.txt"
 BOXES_FILE = BASE_DIR / "mtg_boxes.txt"
 SORCERY_FILE = BASE_DIR / "sorcery_uniques.txt"
+FRAZETTA_FILE = BASE_DIR / "frazetta.txt"
 # saved prices + history go in DATA_DIR (GitHub Actions points this at the "data" branch folder)
 DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR))
 STATE_FILE = DATA_DIR / "ebay_prices.json"
@@ -95,6 +97,12 @@ SORCERY_EXCLUDE_WORDS = {"playset", "x2", "2x", "x3", "3x", "x4", "4x", "deck", 
 SORCERY_GAME_WORDS = {"contested", "realm", "tcg", "gothic", "arthurian", "dragonlord"}
 SORCERY_CARDS_URL = "https://api.sorcerytcg.com/api/cards"
 SORCERY_NAMES_FILE = DATA_DIR / "sorcery_names.json"   # every card name, to skip longer names
+
+# ---- Frank Frazetta artwork (frazetta.txt) ----
+# Sorcery lines are matched from the shared Sorcery listings above; each MTG card gets one search.
+FRAZETTA_EXCLUDE_WORDS = {"proxy", "custom", "altered", "signed", "print", "prints", "poster", "canvas",
+                          "framed", "book", "lot", "bundle", "complete", "sealed", "playset", "deck",
+                          "x2", "2x", "x3", "3x", "x4", "4x"}
 
 # "25th Anniversary Edition" reprints reuse the original set code (e.g. MRD-EN138, PSV-EN000).
 # A 4th column in ebay_cards.txt keeps them apart: "original" skips titles with these words,
@@ -217,8 +225,35 @@ def load_sorcery():
     return entries
 
 
+def load_frazetta():
+    """Frazetta art: "Game | Card | Printing | Standard or Foil | eBay words | TCGplayer | Cardmarket"."""
+    if not FRAZETTA_FILE.exists():
+        return []
+    entries, section = [], ""
+    for line in FRAZETTA_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            section = line[1:-1].strip()
+            continue
+        parts = [p.strip() for p in line.split("|")] + ["", "", "", ""]
+        game, name, printing, finish, words = parts[0], parts[1], parts[2], parts[3].lower(), parts[4]
+        if game not in ("MTG", "Sorcery") or finish not in ("standard", "foil"):
+            sys.exit(f"Check this line in {FRAZETTA_FILE.name}: {line}  (game MTG or Sorcery; Standard or Foil)")
+        tokens = words.split()
+        entries.append({"kind": "frazetta", "num": f"F{len(entries) + 1}", "section": section, "game": game,
+                        "name": name, "printing": printing, "foil": finish == "foil",
+                        "want": [w.lower() for t in tokens if not t.startswith("-") for w in t.split("/") if w],
+                        "avoid": [t[1:].lower() for t in tokens if t.startswith("-")],
+                        "tcgplayer": parts[5], "cardmarket": parts[6],
+                        "code": "", "rarity": "", "edition": "", "key": line,
+                        "label": f"{name} ({game} {printing}{', foil' if finish == 'foil' else ''})"})
+    return entries
+
+
 def load_all():
-    return load_cards() + load_boxes() + load_sorcery()
+    return load_cards() + load_boxes() + load_sorcery() + load_frazetta()
 
 
 # ---------------- set codes ----------------
@@ -505,10 +540,8 @@ def sorcery_matches(title, entry, longer):
     return title_is_foil(words) == entry["foil"]
 
 
-def sorcery_results(entries):
-    """(offer, error) for each Sorcery line, from one shared set of searches."""
-    if not entries:
-        return []
+def sorcery_listings():
+    """Every UK Buy It Now Sorcery listing from the shared searches: (items, None) or (None, error text)."""
     try:
         items, seen = [], set()
         for query in SORCERY_QUERIES:
@@ -523,20 +556,74 @@ def sorcery_results(entries):
                 if not page or offset >= total:
                     break
         log(f"Sorcery: {len(items)} UK listings read")
+        return items, None
     except urllib.error.HTTPError as e:
         log(f"Sorcery: eBay error {e.code} — {e.read().decode(errors='ignore')[:300]}")
-        return [(None, f"eBay error {e.code}")] * len(entries)
+        return None, f"eBay error {e.code}"
     except Exception as e:
         log(f"Sorcery: error — {e}")
-        return [(None, "error")] * len(entries)
+        return None, "error"
 
-    names = sorcery_names()
-    results = []
-    for entry in entries:
-        own = words_of(entry["name"])
-        longer = [n for n in names if words_of(n) != own and contains_phrase(words_of(n), own)]
-        results.append((cheapest_of(items, lambda title: sorcery_matches(title, entry, longer)), None))
-    return results
+
+def longer_sorcery_names(name, names):
+    own = words_of(name)
+    return [n for n in names if words_of(n) != own and contains_phrase(words_of(n), own)]
+
+
+def sorcery_results(entries, pool):
+    """(offer, error) for each Sorcery line, from the shared listings."""
+    items, error = pool
+    if error:
+        return [(None, error)] * len(entries)
+    names = sorcery_names() if entries else []
+    return [(cheapest_of(items, lambda title: sorcery_matches(title, e, longer_sorcery_names(e["name"], names))), None)
+            for e in entries]
+
+
+def frazetta_matches(title, entry, longer=()):
+    words = words_of(title)
+    found = set(words)
+    extra = found - set(words_of(entry["name"]))
+    if (EXCLUDE_WORDS | FRAZETTA_EXCLUDE_WORDS) & extra:
+        return False
+    if not contains_phrase(words, words_of(entry["name"])):
+        return False
+    if any(contains_phrase(words, words_of(other)) for other in longer):
+        return False
+    if entry["want"] and not set(entry["want"]) & found:
+        return False
+    if set(entry["avoid"]) & found:
+        return False
+    if entry["game"] == "Sorcery" and not ("sorcery" in found and (SORCERY_GAME_WORDS | {"alpha", "promo"}) & found):
+        return False
+    return title_is_foil(words) == entry["foil"]
+
+
+def frazetta_results(entries, pool):
+    """Sorcery lines from the shared Sorcery listings; one eBay search per MTG card name."""
+    results = {}
+    sorcery = [e for e in entries if e["game"] == "Sorcery"]
+    if sorcery:
+        items, error = pool
+        names = sorcery_names() if not error else []
+        for e in sorcery:
+            results[e["key"]] = (None, error) if error else (
+                cheapest_of(items, lambda t: frazetta_matches(t, e, longer_sorcery_names(e["name"], names))), None)
+    mtg_names = sorted({e["name"] for e in entries if e["game"] == "MTG"})
+    found = {}
+    for name in mtg_names:
+        try:
+            found[name] = (search(f"frazetta {name}", category=None, min_price=1), None)
+        except urllib.error.HTTPError as e:
+            found[name] = (None, f"eBay error {e.code}")
+        except Exception as e:
+            found[name] = (None, "error")
+    for e in entries:
+        if e["game"] == "MTG":
+            items, error = found[e["name"]]
+            results[e["key"]] = (None, error) if error else (
+                cheapest_of(items, lambda t: frazetta_matches(t, e)), None)
+    return [results[e["key"]] for e in entries]
 
 
 def cheapest_listing(entry):
@@ -642,11 +729,12 @@ def answer_replies(state):
             send_list(cards, state, text[4:].strip())
             log(f"Answered reply: {text}")
             continue
-        numbers = [n.upper() for n in re.findall(r"\b[bBsS]?\d+\b", text)]
+        numbers = [n.upper() for n in re.findall(r"\b[bBsSfF]?\d+\b", text)]
         if not numbers:
-            send_telegram("Reply with a number (e.g. 12, or 3 7 15, B4 for a booster box, S20 for a Sorcery Unique) "
+            send_telegram("Reply with a number (e.g. 12, or 3 7 15, B4 for a booster box, S20 for a Sorcery Unique, "
+                          "F3 for Frazetta art) "
                           "to get the eBay link.\nReply 'list' for everything, 'list cards', 'list boxes', "
-                          "'list sorcery', or e.g. 'list goat' for one section.")
+                          "'list sorcery', 'list frazetta', or e.g. 'list goat' for one section.")
             continue
         lines = []
         for n in numbers[:10]:
@@ -676,7 +764,7 @@ def send_list(cards, state, section_filter=""):
     lines, section_shown = [], None
     word = section_filter.lower()
     kinds = {"cards": "card", "card": "card", "yugioh": "card", "boxes": "box", "box": "box", "mtg": "box",
-             "sorcery": "sorcery", "uniques": "sorcery"}
+             "sorcery": "sorcery", "uniques": "sorcery", "frazetta": "frazetta"}
     for entry in cards:
         if word in kinds:
             if entry["kind"] != kinds[word]:
@@ -720,11 +808,14 @@ def run_pass(state):
     for entry in cards:         # fill the card-name cache first (one file, so not in parallel)
         if entry["kind"] == "card" and not entry["code"]:
             longer_names(entry["name"])
-    single = [c for c in cards if c["kind"] != "sorcery"]
+    single = [c for c in cards if c["kind"] in ("card", "box")]
     with ThreadPoolExecutor(max_workers=PARALLEL_SEARCHES) as pool:
         by_key = dict(zip((c["key"] for c in single), pool.map(fetch_offer, single)))
     sorcery = [c for c in cards if c["kind"] == "sorcery"]
-    by_key.update(zip((c["key"] for c in sorcery), sorcery_results(sorcery)))
+    frazetta = [c for c in cards if c["kind"] == "frazetta"]
+    pool = sorcery_listings() if sorcery or any(c["game"] == "Sorcery" for c in frazetta) else ([], None)
+    by_key.update(zip((c["key"] for c in sorcery), sorcery_results(sorcery, pool)))
+    by_key.update(zip((c["key"] for c in frazetta), frazetta_results(frazetta, pool)))
     results = [by_key[c["key"]] for c in cards]
 
     drops, rises, new, gone, errors = [], [], [], [], []
@@ -781,7 +872,8 @@ def run_pass(state):
             import references
             references.update([c for c in cards if c["kind"] == "card"], DATA_DIR, CARDMARKET_IDS_FILE, log,
                               boxes=[c for c in cards if c["kind"] == "box"],
-                              sorcery=[c for c in cards if c["kind"] == "sorcery"])
+                              sorcery=[c for c in cards if c["kind"] == "sorcery"],
+                              frazetta=[c for c in cards if c["kind"] == "frazetta"])
         except Exception as e:     # reference prices are extra - never stop the eBay check
             log(f"references: failed - {e}")
 
@@ -790,18 +882,22 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--once", action="store_true", help="run one pass and exit")
     ap.add_argument("--replies", action="store_true", help="only answer Telegram replies and exit")
-    ap.add_argument("--dry-run", choices=["cards", "boxes", "sorcery", "all"],
+    ap.add_argument("--dry-run", choices=["cards", "boxes", "sorcery", "frazetta", "all"],
                     help="search eBay and print the cheapest match for each line; saves and sends nothing")
     args = ap.parse_args()
 
     if args.dry_run:
-        entries = {"cards": load_cards, "boxes": load_boxes, "sorcery": load_sorcery, "all": load_all}[args.dry_run]()
+        entries = {"cards": load_cards, "boxes": load_boxes, "sorcery": load_sorcery, "frazetta": load_frazetta,
+                   "all": load_all}[args.dry_run]()
         get_token()
-        single = [e for e in entries if e["kind"] != "sorcery"]
-        with ThreadPoolExecutor(max_workers=PARALLEL_SEARCHES) as pool:
-            found = dict(zip((e["key"] for e in single), pool.map(fetch_offer, single)))
+        single = [e for e in entries if e["kind"] in ("card", "box")]
+        with ThreadPoolExecutor(max_workers=PARALLEL_SEARCHES) as threads:
+            found = dict(zip((e["key"] for e in single), threads.map(fetch_offer, single)))
         sorcery = [e for e in entries if e["kind"] == "sorcery"]
-        found.update(zip((e["key"] for e in sorcery), sorcery_results(sorcery)))
+        frazetta = [e for e in entries if e["kind"] == "frazetta"]
+        pool = sorcery_listings() if sorcery or any(e["game"] == "Sorcery" for e in frazetta) else ([], None)
+        found.update(zip((e["key"] for e in sorcery), sorcery_results(sorcery, pool)))
+        found.update(zip((e["key"] for e in frazetta), frazetta_results(frazetta, pool)))
         for entry, (offer, error) in ((e, found[e["key"]]) for e in entries):
             result = error or (describe(offer) + f"\n      {offer['url']}" if offer else "no listing")
             print(f"{entry['num']:>4}. {entry['label']}: {result}", flush=True)
