@@ -576,8 +576,11 @@ def sorcery_results(entries, pool):
     if error:
         return [(None, error)] * len(entries)
     names = sorcery_names() if entries else []
-    return [(cheapest_of(items, lambda title: sorcery_matches(title, e, longer_sorcery_names(e["name"], names))), None)
-            for e in entries]
+    results = []
+    for e in entries:
+        longer = longer_sorcery_names(e["name"], names)    # once per line, not once per listing
+        results.append((cheapest_of(items, lambda title: sorcery_matches(title, e, longer)), None))
+    return results
 
 
 def frazetta_matches(title, entry, longer=()):
@@ -607,8 +610,11 @@ def frazetta_results(entries, pool):
         items, error = pool
         names = sorcery_names() if not error else []
         for e in sorcery:
-            results[e["key"]] = (None, error) if error else (
-                cheapest_of(items, lambda t: frazetta_matches(t, e, longer_sorcery_names(e["name"], names))), None)
+            if error:
+                results[e["key"]] = (None, error)
+                continue
+            longer = longer_sorcery_names(e["name"], names)  # once per line, not once per listing
+            results[e["key"]] = (cheapest_of(items, lambda t: frazetta_matches(t, e, longer)), None)
     mtg_names = sorted({e["name"] for e in entries if e["game"] == "MTG"})
     found = {}
     for name in mtg_names:
