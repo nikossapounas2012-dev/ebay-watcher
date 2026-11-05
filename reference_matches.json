@@ -401,8 +401,8 @@
  },
  "Call of the Haunted | PSV-EN012 | Ultra Rare | 25th": {
   "cardmarket": {
-   "product": 707164,
-   "note": ""
+   "product": null,
+   "note": "set not found on Cardmarket - add its link to cardmarket_ids.txt"
   },
   "tcgplayer": {
    "product": 486616,
@@ -531,8 +531,8 @@
  },
  "Thousand-Eyes Restrict | PSV-EN084 | Ultra Rare | 25th": {
   "cardmarket": {
-   "product": 707236,
-   "note": ""
+   "product": null,
+   "note": "set not found on Cardmarket - add its link to cardmarket_ids.txt"
   },
   "tcgplayer": {
    "product": 486769,
@@ -751,8 +751,8 @@
  },
  "Jinzo | PSV-EN000 | Secret Rare | 25th": {
   "cardmarket": {
-   "product": 707152,
-   "note": ""
+   "product": null,
+   "note": "set not found on Cardmarket - add its link to cardmarket_ids.txt"
   },
   "tcgplayer": {
    "product": 486603,
@@ -1061,8 +1061,8 @@
  },
  "Premature Burial | PSV-EN037 | Ultra Rare | 25th": {
   "cardmarket": {
-   "product": 707189,
-   "note": ""
+   "product": null,
+   "note": "set not found on Cardmarket - add its link to cardmarket_ids.txt"
   },
   "tcgplayer": {
    "product": 486678,
@@ -3526,7 +3526,7 @@
   },
   "cardmarket": {
    "product": 912382,
-   "note": "no Cardmarket price"
+   "note": ""
   }
  },
  "City of Glass | Gothic | Standard": {
