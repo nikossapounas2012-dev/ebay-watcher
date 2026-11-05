@@ -66,3 +66,15 @@ jobs:
             git commit --quiet -m "Prices $(date -u '+%Y-%m-%d %H:%M') UTC"
             git push --quiet origin data
           fi
+
+      # 'own' / 'sold' replies in Telegram change collection.txt - save it to main
+      - name: Save collection
+        if: always()
+        run: |
+          if git diff --quiet -- collection.txt; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add collection.txt
+          git commit --quiet -m "Collection: changed from Telegram"
+          git pull --quiet --rebase origin main
+          git push --quiet origin HEAD:main

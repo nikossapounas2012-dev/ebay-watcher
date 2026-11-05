@@ -52,6 +52,9 @@ CARDS_FILE = BASE_DIR / "ebay_cards.txt"
 BOXES_FILE = BASE_DIR / "mtg_boxes.txt"
 SORCERY_FILE = BASE_DIR / "sorcery_uniques.txt"
 FRAZETTA_FILE = BASE_DIR / "frazetta.txt"
+OP_CARDS_FILE = BASE_DIR / "op_cards.txt"
+OP_BOXES_FILE = BASE_DIR / "op_boxes.txt"
+COLLECTION_FILE = BASE_DIR / "collection.txt"
 # saved prices + history go in DATA_DIR (GitHub Actions points this at the "data" branch folder)
 DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR))
 STATE_FILE = DATA_DIR / "ebay_prices.json"
@@ -104,6 +107,36 @@ SORCERY_NAMES_FILE = DATA_DIR / "sorcery_names.json"   # every card name, to ski
 FRAZETTA_EXCLUDE_WORDS = {"proxy", "custom", "altered", "signed", "print", "prints", "poster", "canvas",
                           "framed", "book", "lot", "bundle", "complete", "sealed", "playset", "deck",
                           "x2", "2x", "x3", "3x", "x4", "4x"}
+
+# ---- One Piece Card Game (op_cards.txt, op_boxes.txt) ----
+# Singles: a few broad searches, split by price so eBay's 10,000-result cap never cuts the dear ones off;
+# every card line (and its PSA 10 copy) is then matched by card number from those listings.
+OP_QUERY = "(one piece, opcg)"
+OP_PRICE_BANDS = [(12, 40), (40, 100), (100, 300), (300, None)]   # £ from..to
+OP_MAX_RESULTS = 1600                 # per band (8 pages of 200)
+OP_BOX_QUERY = "(one piece, opcg) booster (box, display)"
+OP_BOX_MIN_PRICE = 60
+OP_BOX_MAX_RESULTS = 1000
+OP_GRADED = "PSA 10"                  # every card line is also watched as this graded copy (numbers G1, G2...)
+OP_LANGUAGE_WORDS = {"japanese", "japan", "jp", "jpn", "chinese", "cn", "korean", "kr", "asia", "asian",
+                     "french", "thai", "simplified", "traditional"}
+OP_EXCLUDE_WORDS = {"proxy", "orica", "custom", "replica", "fake", "bundle", "lot", "joblot", "playset",
+                    "x2", "2x", "x3", "3x", "x4", "4x", "sleeve", "sleeves", "playmat", "binder", "digital",
+                    "choose", "pick", "select", "booster", "box", "pack", "display", "sealed", "case"}
+OP_GRADED_WORDS = {"psa", "bgs", "cgc", "beckett", "graded", "slab", "slabbed", "sgc", "gem", "gma"}
+OP_ALT = {"alt", "alternate", "aa", "parallel"}
+# the words a title needs for each version (one word from each group)
+OP_VERSIONS = {
+    "Red Super Alt Art": [{"red"}, {"super"}], "Super Alt Art": [{"super"}, OP_ALT],
+    "Gold SP": [{"sp", "special"}, {"gold"}], "Alt Art Manga": [{"manga"}, OP_ALT], "Manga": [{"manga"}],
+    "SP": [{"sp", "special"}], "Wanted Poster": [{"wanted"}], "TR": [{"tr", "treasure"}],
+    "Full Art": [{"full"}], "Alt Art": [OP_ALT],
+}
+# rare versions sellers always name, so a title naming one never counts for another version
+OP_ALWAYS_NAMED = {"Red Super Alt Art", "Super Alt Art", "Gold SP"}
+OP_CODE_RE = re.compile(r"(?<![a-z0-9])(?:(op|eb|st|prb)\s*-?\s*(\d{1,2})|(p))\s*-?\s*(\d{3})(?![0-9])")
+OP_BOX_EXCLUDE_WORDS = BOX_EXCLUDE_WORDS | {"double", "sleeved", "tin", "tins", "illustration", "gift",
+                                           "asia", "asian"}
 
 # "25th Anniversary Edition" reprints reuse the original set code (e.g. MRD-EN138, PSV-EN000).
 # A 4th column in ebay_cards.txt keeps them apart: "original" skips titles with these words,
@@ -272,8 +305,156 @@ def load_frazetta():
     return entries
 
 
+def op_code(prefix, set_no, number):
+    """('op', '5', '119') -> 'OP05-119'; ('p', '', '084') -> 'P-084'."""
+    return f"{prefix.upper()}{int(set_no):02d}-{number}" if set_no else f"{prefix.upper()}-{number}"
+
+
+def op_codes_in(text):
+    return {op_code(m[0] or m[2], m[1], m[3]) for m in OP_CODE_RE.findall(text.lower())}
+
+
+def load_op_cards():
+    """One Piece singles: "Card name | Card number | Version | TCGplayer". Each line gives two entries:
+    the ungraded card (P1, P2...) and its PSA 10 copy (G1, G2...)."""
+    if not OP_CARDS_FILE.exists():
+        return []
+    entries, section, n = [], "", 0
+    for line in OP_CARDS_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            section = line[1:-1].strip()
+            continue
+        line, target = split_target(line)   # "| £90" = alert at or under £90
+        parts = [p.strip() for p in line.split("|")] + ["", "", ""]
+        name, version = parts[0], parts[2]
+        codes = op_codes_in(parts[1])
+        if len(codes) != 1 or version not in OP_VERSIONS:
+            sys.exit(f"Check this line in {OP_CARDS_FILE.name}: {line}  (number like OP05-119; version one of: "
+                     f"{', '.join(OP_VERSIONS)})")
+        n += 1
+        base = {"section": section, "name": name, "op_code": codes.pop(), "version": version, "foil": None,
+                "code": "", "rarity": "", "edition": ""}
+        entries.append({**base, "kind": "opcard", "num": f"P{n}", "key": line, "target": target,
+                        "tcgplayer": parts[3], "cardmarket": "",
+                        "label": f"{name} {parts[1]} {version}"})
+        entries.append({**base, "kind": "opgraded", "num": f"G{n}", "key": f"{line} | {OP_GRADED}",
+                        "target": None, "tcgplayer": "", "cardmarket": "",
+                        "label": f"{name} {parts[1]} {version} {OP_GRADED}"})
+    return entries
+
+
+def load_op_boxes():
+    """One Piece boxes: "Set name | CODE | eBay names | TCGplayer | Cardmarket"."""
+    if not OP_BOXES_FILE.exists():
+        return []
+    boxes, section = [], ""
+    for line in OP_BOXES_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            section = line[1:-1].strip()
+            continue
+        line, target = split_target(line)   # "| £90" = alert at or under £90
+        parts = [p.strip() for p in line.split("|")] + ["", "", ""]
+        m = re.fullmatch(r"([A-Za-z]+)-?(\d{1,2})", parts[1])
+        if not m:
+            sys.exit(f"Check this line in {OP_BOXES_FILE.name}: {line}  (set code like OP05, EB01, PRB01)")
+        names = [n.strip() for n in (parts[2] or parts[0]).split("/")]
+        avoid = [w[1:].lower() for n in names for w in n.split() if w.startswith("-")]
+        names = [" ".join(w for w in n.split() if not w.startswith("-")) for n in names]
+        boxes.append({"kind": "opbox", "num": f"PB{len(boxes) + 1}", "section": section, "name": parts[0],
+                      "set": parts[1].upper(), "set_re": re.compile(
+                          rf"(?<![a-z0-9]){m[1].lower()}\s*-?\s*0?{int(m[2])}(?![0-9])"),
+                      "ebay_names": [n for n in names if n], "avoid": avoid, "foil": None,
+                      "tcgplayer": parts[3], "cardmarket": parts[4],
+                      "code": "", "rarity": "", "edition": "", "key": line, "target": target,
+                      "label": f"{parts[0]} booster box"})
+    return boxes
+
+
+# ---------------- collection (collection.txt) ----------------
+COLLECTION_HEADER = """# My collection: what I own and what I paid, one item per line:
+#   Kind | the item's line from its list | £paid | date bought
+#   Kinds: Yu-Gi-Oh, MTG box, Sorcery, Frazetta, One Piece, One Piece PSA 10, One Piece box
+#   e.g.  Sorcery | Aino | Gothic | Foil | £40 | 2026-11-05
+#         One Piece box | Two Legends | OP08 | Two Legends | 68/23462/542504 | 18/753001 | £230 | 2026-11-05
+#   - easiest from Telegram: 'own S12 £40' (any watched number) adds the right line for you
+#   - Sorcery lines can be any card from Alpha, Beta, Arthurian Legends, Gothic or Dragonlord
+#     ('own Sorcery | Death Dealer | Beta | Standard | £25'); the price check then watches it too
+#   - 'sold C3' removes a line. The number is C + the line's position (C1, C2...).
+# Worth now: Cardmarket trend, else TCGplayer, else the cheapest eBay listing (shown on the website too).
+
+"""
+
+# "Kind | <the line from its list> | £paid | date": the kind names the list the line comes from
+COLLECTION_KINDS = {"yu-gi-oh": "card", "mtg box": "box", "sorcery": "sorcery", "frazetta": "frazetta",
+                    "one piece": "opcard", "one piece psa 10": "opgraded", "one piece box": "opbox"}
+COLLECTION_TAGS = {"card": "Yu-Gi-Oh", "box": "MTG box", "sorcery": "Sorcery", "frazetta": "Frazetta",
+                   "opcard": "One Piece", "opgraded": "One Piece PSA 10", "opbox": "One Piece box"}
+
+
+def parse_collection_line(line):
+    """-> (kind, key, paid, date) or None. The key is the line as written in its own list."""
+    parts = [p.strip() for p in line.split("|")]
+    paid_at = next((i for i, p in enumerate(parts) if re.fullmatch(r"£\s*\d+(\.\d+)?", p)), None)
+    kind = COLLECTION_KINDS.get(parts[0].lower())
+    if not kind or paid_at is None or paid_at < 2:
+        return None
+    key = " | ".join(parts[1:paid_at])
+    if kind == "opgraded":
+        key += f" | {OP_GRADED}"
+    return kind, key, float(parts[paid_at][1:].strip()), parts[paid_at + 1] if len(parts) > paid_at + 1 else ""
+
+
+def sorcery_entry(key, num):
+    """A Sorcery card that is only in the collection ("Name | Set | Standard or Foil"), or None."""
+    parts = [p.strip() for p in key.split("|")] + ["", ""]
+    name, set_name, finish = parts[0], parts[1], parts[2].lower()
+    if not name or set_name not in SORCERY_SET_WORDS or finish not in ("standard", "foil"):
+        return None
+    return {"kind": "sorcery", "num": num, "section": "Collection", "name": name, "set": set_name,
+            "foil": finish == "foil", "code": "", "rarity": "", "edition": "", "key": key, "target": None,
+            "label": f"{name} ({set_name}{', foil' if finish == 'foil' else ''})"}
+
+
+def load_collection(watched):
+    """Collection lines as dicts: num (C1...), kind, key, paid, date, entry (None if unknown), line.
+    Sorcery cards that aren't watched get their own entry (watched from then on, numbered C...)."""
+    if not COLLECTION_FILE.exists():
+        return []
+    by_key = {e["key"]: e for e in watched}
+    items = []
+    for line in COLLECTION_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or (line.startswith("[") and line.endswith("]")):
+            continue
+        parsed = parse_collection_line(line)
+        num = f"C{len(items) + 1}"
+        if not parsed:
+            log(f"collection: can't read '{line}' (Kind | line from its list | £paid | date)")
+            continue
+        kind, key, paid, date = parsed
+        entry = by_key.get(key) or (sorcery_entry(key, num) if kind == "sorcery" else None)
+        if entry is None:
+            log(f"collection: '{key}' is not in the {COLLECTION_TAGS[kind]} list")
+        items.append({"num": num, "kind": kind, "key": key, "paid": paid, "date": date, "entry": entry,
+                      "line": line})
+    return items
+
+
 def load_all():
-    return load_cards() + load_boxes() + load_sorcery() + load_frazetta()
+    watched = load_cards() + load_boxes() + load_sorcery() + load_frazetta() + load_op_cards() + load_op_boxes()
+    keys = {e["key"] for e in watched}
+    extra = {}
+    for item in load_collection(watched):
+        e = item["entry"]
+        if e and e["key"] not in keys:
+            extra.setdefault(e["key"], e)
+    return watched + list(extra.values())
 
 
 TARGET_RE = re.compile(r"\s*\|\s*(?:max\s*)?£\s*(\d+(?:\.\d+)?)\s*(?=\||$)", re.I)
@@ -330,6 +511,8 @@ def alert_reasons(entry, offer, prev, lows, markets):
     reasons = []
     if entry.get("target") and price <= entry["target"]:
         reasons.append(f"🎯 at/under your £{entry['target']:g}")
+    if prev is None and entry["key"] not in lows:
+        return reasons   # never seen before (e.g. a new list): only your own target alerts, no flood
     market = markets.get(entry["key"])
     if market and market[0] >= ALERT_MIN_PRICE and price <= DEAL * market[0]:
         reasons.append(f"💰 {1 - price / market[0]:.0%} under {market[1]} £{market[0]:.2f}")
@@ -484,12 +667,13 @@ def get_token():
     return _token["value"]
 
 
-def search(query, category=CATEGORY_ID, min_price=None, new_only=False, offset=0, with_total=False):
+def search(query, category=CATEGORY_ID, min_price=None, new_only=False, offset=0, with_total=False,
+           max_price=None):
     filters = [f"itemLocationCountry:{ITEM_COUNTRY}", "priceCurrency:GBP"]
     if BUY_IT_NOW_ONLY:
         filters.append("buyingOptions:{FIXED_PRICE}")
-    if min_price:
-        filters.append(f"price:[{min_price}..]")
+    if min_price or max_price:
+        filters.append(f"price:[{min_price or 0}..{max_price or ''}]")
     if new_only:
         filters.append("conditions:{NEW}")
     params = {
@@ -715,6 +899,124 @@ def frazetta_results(entries, pool):
     return [results[e["key"]] for e in entries]
 
 
+def paged(query, cap, **kw):
+    """Every result of one search, page by page (up to cap)."""
+    items, offset = [], 0
+    while offset < cap:
+        page, total = search(query, offset=offset, with_total=True, **kw)
+        items += page
+        offset += RESULTS_PER_SEARCH
+        if not page or offset >= total:
+            break
+    return items, total
+
+
+def op_listings():
+    """Every UK Buy It Now One Piece single from the price-band searches, indexed by card number:
+    ({'OP05-119': [items]}, None) or (None, error text)."""
+    try:
+        by_code, seen = {}, set()
+        for low, high in OP_PRICE_BANDS:
+            items, total = paged(OP_QUERY, OP_MAX_RESULTS, min_price=low, max_price=high)
+            log(f"One Piece £{low}-{high or ''}: {len(items)} of {total} listings read")
+            for item in items:
+                if item.get("itemId") in seen:
+                    continue
+                seen.add(item.get("itemId"))
+                for code in op_codes_in(item.get("title", "")):
+                    by_code.setdefault(code, []).append(item)
+        log(f"One Piece: {len(seen)} UK listings read")
+        return by_code, None
+    except urllib.error.HTTPError as e:
+        log(f"One Piece: eBay error {e.code} — {e.read().decode(errors='ignore')[:300]}")
+        return None, f"eBay error {e.code}"
+    except Exception as e:
+        log(f"One Piece: error — {e}")
+        return None, "error"
+
+
+def op_version(found, versions):
+    """The version a title's words name, from the ones this card number has (plus the always-named rare ones)."""
+    for v, groups in OP_VERSIONS.items():       # most specific first
+        if (v in versions or v in OP_ALWAYS_NAMED) and all(g & found for g in groups):
+            return v
+    return None
+
+
+def op_card_matches(title, entry, versions):
+    words = words_of(title)
+    found = set(words)
+    if (OP_LANGUAGE_WORDS | OP_EXCLUDE_WORDS) & found:
+        return False
+    if entry["op_code"] not in op_codes_in(title):
+        return False
+    if entry["kind"] == "opgraded":
+        if not (contains_phrase(words, ["psa", "10"]) or "psa10" in found) or {"bgs", "cgc", "sgc"} & found:
+            return False
+    elif OP_GRADED_WORDS & found or any(w.startswith(("psa", "bgs", "cgc", "sgc")) for w in found):
+        return False     # graded (also "PSA10", "BGS9.5")
+    return op_version(found, versions) == entry["version"]
+
+
+def op_results(entries, pool):
+    """(offer, error) for each One Piece card line, from the shared listings."""
+    by_code, error = pool
+    if error:
+        return [(None, error)] * len(entries)
+    versions = {}
+    for e in entries:
+        versions.setdefault(e["op_code"], set()).add(e["version"])
+    return [(cheapest_of(by_code.get(e["op_code"], []),
+                         lambda t: op_card_matches(t, e, versions[e["op_code"]])), None) for e in entries]
+
+
+def op_box_matches(title, entry):
+    words = words_of(title)
+    found = set(words)
+    text = " ".join(words)
+    if (EXCLUDE_WORDS | OP_BOX_EXCLUDE_WORDS) & found or any(p in text for p in BOX_EXCLUDE_PHRASES):
+        return False
+    if op_codes_in(title):
+        return False     # a card number: a single card, not a box
+    if any(re.search(rf"(?<![a-z0-9]){re.escape(a)}", title.lower()) for a in entry["avoid"]):
+        return False     # "-vol" also skips "Vol.2"
+    if "booster" not in found or not {"box", "display"} & found:
+        return False
+    return bool(entry["set_re"].search(title.lower())
+                or any(contains_phrase(words, words_of(n)) for n in entry["ebay_names"]))
+
+
+def op_box_results(entries):
+    try:
+        items, total = paged(OP_BOX_QUERY, OP_BOX_MAX_RESULTS, category=None, min_price=OP_BOX_MIN_PRICE,
+                             new_only=True)
+        log(f"One Piece boxes: {len(items)} of {total} listings read")
+    except urllib.error.HTTPError as e:
+        return [(None, f"eBay error {e.code}")] * len(entries)
+    except Exception:
+        return [(None, "error")] * len(entries)
+    return [(cheapest_of(items, lambda t: op_box_matches(t, e)), None) for e in entries]
+
+
+def search_all(entries):
+    """{key: (offer, error)} for every entry: single searches in parallel, then the shared ones."""
+    single = [e for e in entries if e["kind"] in ("card", "box")]
+    with ThreadPoolExecutor(max_workers=PARALLEL_SEARCHES) as threads:
+        found = dict(zip((e["key"] for e in single), threads.map(fetch_offer, single)))
+    sorcery = [e for e in entries if e["kind"] == "sorcery"]
+    frazetta = [e for e in entries if e["kind"] == "frazetta"]
+    pool = sorcery_listings() if sorcery or any(e["game"] == "Sorcery" for e in frazetta) else ([], None)
+    found.update(zip((e["key"] for e in sorcery), sorcery_results(sorcery, pool)))
+    found.update(zip((e["key"] for e in frazetta), frazetta_results(frazetta, pool)))
+    op = [e for e in entries if e["kind"] in ("opcard", "opgraded")]
+    if op:
+        found.update(zip((e["key"] for e in op), op_results(op, op_listings())))
+    boxes = [e for e in entries if e["kind"] == "opbox"]
+    if boxes:
+        found.update(zip((e["key"] for e in boxes), op_box_results(boxes)))
+    return found
+
+
 def cheapest_listing(entry):
     if entry["kind"] == "box":
         return cheapest_box(entry)
@@ -809,11 +1111,27 @@ def answer_replies(state):
 
     cards = load_all()
     by_num = {entry["num"]: entry for entry in cards}
+    for item in load_collection(cards):        # C1, C2... = the collection lines
+        if item["entry"]:
+            by_num[item["num"]] = item["entry"]
     for update in updates:
         message = update.get("message") or {}
         if str((message.get("chat") or {}).get("id")) != chat:
             continue   # only answer you, not anyone else who finds the bot
         text = message.get("text", "").strip()
+        low = text.lower()
+        if low.startswith(("own ", "bought ")):
+            add_to_collection(text.split(None, 1)[1], cards, by_num, state)
+            log(f"Answered reply: {text}")
+            continue
+        if low.startswith(("sold ", "remove ")):
+            remove_from_collection(text.split(None, 1)[1], cards)
+            log(f"Answered reply: {text}")
+            continue
+        if low.strip() in ("collection", "my collection", "owned"):
+            send_collection(cards, state)
+            log(f"Answered reply: {text}")
+            continue
         if text.lower().strip() in ("deals", "deal", "alerts"):
             send_deals(cards, state)
             log(f"Answered reply: {text}")
@@ -822,13 +1140,16 @@ def answer_replies(state):
             send_list(cards, state, text[4:].strip())
             log(f"Answered reply: {text}")
             continue
-        numbers = [n.upper() for n in re.findall(r"\b[bBsSfF]?\d+\b", text)]
+        numbers = [n.upper() for n in re.findall(r"\b(?:pb|[bsfpgc])?\d+\b", text, re.I)]
         if not numbers:
             send_telegram("Reply with a number (e.g. 12, or 3 7 15, B4 for a booster box, S20 for a Sorcery Unique, "
-                          "F3 for Frazetta art) "
+                          "F3 for Frazetta art, P5 for a One Piece card, G5 for its PSA 10, PB2 for a One Piece box, "
+                          "C1 for your collection) "
                           "to get the eBay link.\nReply 'list' for everything, 'list cards', 'list boxes', "
                           "'list sorcery', 'list frazetta', or e.g. 'list goat' for one section.\n"
-                          "Reply 'deals' for everything at/under its target price or 20%+ under market.")
+                          "Reply 'deals' for everything at/under its target price or 20%+ under market.\n"
+                          "Collection: 'own S12 £40' (any number), 'own Sorcery | Aino | Beta | Foil | £25' "
+                          "(any Sorcery card), 'sold C3', 'collection' for what it's worth now.")
             continue
         lines = []
         for n in numbers[:10]:
@@ -858,7 +1179,9 @@ def send_list(cards, state, section_filter=""):
     lines, section_shown = [], None
     word = section_filter.lower()
     kinds = {"cards": "card", "card": "card", "yugioh": "card", "boxes": "box", "box": "box", "mtg": "box",
-             "sorcery": "sorcery", "uniques": "sorcery", "frazetta": "frazetta"}
+             "sorcery": "sorcery", "uniques": "sorcery", "frazetta": "frazetta", "onepiece": "opcard",
+             "one piece": "opcard", "op": "opcard", "graded": "opgraded", "psa": "opgraded",
+             "opboxes": "opbox", "op boxes": "opbox"}
     for entry in cards:
         if word in kinds:
             if entry["kind"] != kinds[word]:
@@ -875,6 +1198,83 @@ def send_list(cards, state, section_filter=""):
         send_telegram(f"No section matches '{section_filter}'.")
         return
     send_long("Latest prices\n", lines + ["\nReply with a number for the eBay link."])
+
+
+def value_of(entry, state, markets):
+    """(value in £, where from): the market price, else the cheapest eBay listing now."""
+    if entry and entry["key"] in markets:
+        return markets[entry["key"]]
+    offer = state.get(entry["key"]) if entry else None
+    return (offer["price"], "eBay") if offer else (None, "")
+
+
+def add_to_collection(text, cards, by_num, state):
+    """'S12 £40' (any watched number) or 'Sorcery | Aino | Beta | Foil | £25' (any Sorcery card)."""
+    m = re.fullmatch(r"\s*((?:pb|[bsfpgc])?\d+)\s+£?\s*(\d+(?:\.\d+)?)\s*", text, re.I)
+    today = datetime.now().strftime("%Y-%m-%d")
+    if m:
+        entry = by_num.get(m[1].upper())
+        if not entry:
+            send_telegram(f"{m[1].upper()}: nothing with that number.")
+            return
+        line = f"{COLLECTION_TAGS[entry['kind']]} | {entry['key'].removesuffix(' | ' + OP_GRADED)} | £{float(m[2]):g} | {today}"
+    else:
+        parsed = parse_collection_line(text if re.search(r"\|\s*£", text) else "")
+        entry = sorcery_entry(parsed[1], "") if parsed and parsed[0] == "sorcery" else None
+        if not entry:
+            send_telegram("Didn't get that. Send e.g. 'own S12 £40' (a watched number) or "
+                          "'own Sorcery | Aino | Beta | Foil | £25' (any Sorcery card: Alpha, Beta, "
+                          "Arthurian Legends, Gothic or Dragonlord; Standard or Foil).")
+            return
+        entry = next((e for e in cards if e["key"] == entry["key"]), entry)
+        line = f"Sorcery | {entry['key']} | £{parsed[2]:g} | {today}"
+    text_now = COLLECTION_FILE.read_text(encoding="utf-8") if COLLECTION_FILE.exists() else COLLECTION_HEADER
+    text_now = text_now if text_now.endswith("\n") else text_now + "\n"
+    COLLECTION_FILE.write_text(text_now + line + "\n", encoding="utf-8")
+    num = load_collection(cards)[-1]["num"]
+    value, source = value_of(entry, state, market_prices(cards))
+    now = f"{source} £{value:.2f}" if value else "no price yet - it will be checked at the next price check"
+    send_telegram(f"Added {num}: {entry['label']}, paid £{float(m[2] if m else parsed[2]):.2f}.\nNow: {now}.\n"
+                  "Reply 'collection' to see everything, 'sold " + num + "' to remove it.")
+
+
+def remove_from_collection(text, cards):
+    m = re.fullmatch(r"\s*c?(\d+)\s*", text, re.I)
+    items = load_collection(cards)
+    if not m or not 1 <= int(m[1]) <= len(items):
+        send_telegram(f"Send e.g. 'sold C3' (your collection has C1 to C{len(items)}).")
+        return
+    item = items[int(m[1]) - 1]
+    lines = COLLECTION_FILE.read_text(encoding="utf-8").splitlines()
+    lines.remove(item["line"])
+    COLLECTION_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    label = item["entry"]["label"] if item["entry"] else item["key"]
+    send_telegram(f"Removed {item['num']}: {label} (paid £{item['paid']:.2f}). Numbers after it moved up by one.")
+
+
+def send_collection(cards, state):
+    items = load_collection(cards)
+    if not items:
+        send_telegram("Your collection is empty. Add with e.g. 'own S12 £40' or 'own Sorcery | Aino | Beta | Foil | £25'.")
+        return
+    markets, lines, paid, worth, unpriced = market_prices(cards), [], 0.0, 0.0, 0
+    for item in items:
+        value, source = value_of(item["entry"], state, markets)
+        label = item["entry"]["label"] if item["entry"] else item["key"]
+        if value is None:
+            unpriced += 1
+            lines.append(f"{item['num']}. {label}: paid £{item['paid']:.2f} · no price yet")
+            continue
+        paid += item["paid"]      # totals compare only items that have a price now
+        worth += value
+        gain = value - item["paid"]
+        lines.append(f"{item['num']}. {label}: paid £{item['paid']:.2f} · now £{value:.2f} ({source}) "
+                     f"{'▲' if gain >= 0 else '▼'}£{abs(gain):.2f}")
+    total = worth - paid
+    send_long(f"Your collection: {len(items)} items. Paid £{paid:.2f}, worth £{worth:.2f} now "
+              f"({'+' if total >= 0 else '-'}£{abs(total):.2f})"
+              + (f" - {unpriced} without a price yet, not counted" if unpriced else "") + "\n",
+              lines + ["\nWorth = Cardmarket trend, else TCGplayer, else the cheapest eBay listing now."])
 
 
 def send_deals(cards, state):
@@ -924,14 +1324,7 @@ def run_pass(state):
     for entry in cards:         # fill the card-name cache first (one file, so not in parallel)
         if entry["kind"] == "card" and not entry["code"]:
             longer_names(entry["name"])
-    single = [c for c in cards if c["kind"] in ("card", "box")]
-    with ThreadPoolExecutor(max_workers=PARALLEL_SEARCHES) as pool:
-        by_key = dict(zip((c["key"] for c in single), pool.map(fetch_offer, single)))
-    sorcery = [c for c in cards if c["kind"] == "sorcery"]
-    frazetta = [c for c in cards if c["kind"] == "frazetta"]
-    pool = sorcery_listings() if sorcery or any(c["game"] == "Sorcery" for c in frazetta) else ([], None)
-    by_key.update(zip((c["key"] for c in sorcery), sorcery_results(sorcery, pool)))
-    by_key.update(zip((c["key"] for c in frazetta), frazetta_results(frazetta, pool)))
+    by_key = search_all(cards)
     results = [by_key[c["key"]] for c in cards]
 
     drops, rises, new, gone, errors, alerts = [], [], [], [], [], []
@@ -1005,7 +1398,8 @@ def run_pass(state):
             references.update([c for c in cards if c["kind"] == "card"], DATA_DIR, CARDMARKET_IDS_FILE, log,
                               boxes=[c for c in cards if c["kind"] == "box"],
                               sorcery=[c for c in cards if c["kind"] == "sorcery"],
-                              frazetta=[c for c in cards if c["kind"] == "frazetta"])
+                              frazetta=[c for c in cards if c["kind"] == "frazetta"],
+                              onepiece=[c for c in cards if c["kind"] in ("opcard", "opbox")])
         except Exception as e:     # reference prices are extra - never stop the eBay check
             log(f"references: failed - {e}")
 
@@ -1029,22 +1423,19 @@ def main():
     ap.add_argument("--once", action="store_true", help="run one pass and exit")
     ap.add_argument("--replies", action="store_true", help="only answer Telegram replies and exit")
     ap.add_argument("--force", action="store_true", help="check even if the last check was recent")
-    ap.add_argument("--dry-run", choices=["cards", "boxes", "sorcery", "frazetta", "all"],
+    ap.add_argument("--dry-run", choices=["cards", "boxes", "sorcery", "frazetta", "onepiece", "opboxes",
+                                          "collection", "all"],
                     help="search eBay and print the cheapest match for each line; saves and sends nothing")
     args = ap.parse_args()
 
     if args.dry_run:
         entries = {"cards": load_cards, "boxes": load_boxes, "sorcery": load_sorcery, "frazetta": load_frazetta,
-                   "all": load_all}[args.dry_run]()
+                   "onepiece": load_op_cards, "opboxes": load_op_boxes, "all": load_all,
+                   "collection": lambda: [i["entry"] for i in load_collection(load_all()) if i["entry"]]
+                   }[args.dry_run]()
+        entries = list({e["key"]: e for e in entries}.values())
         get_token()
-        single = [e for e in entries if e["kind"] in ("card", "box")]
-        with ThreadPoolExecutor(max_workers=PARALLEL_SEARCHES) as threads:
-            found = dict(zip((e["key"] for e in single), threads.map(fetch_offer, single)))
-        sorcery = [e for e in entries if e["kind"] == "sorcery"]
-        frazetta = [e for e in entries if e["kind"] == "frazetta"]
-        pool = sorcery_listings() if sorcery or any(e["game"] == "Sorcery" for e in frazetta) else ([], None)
-        found.update(zip((e["key"] for e in sorcery), sorcery_results(sorcery, pool)))
-        found.update(zip((e["key"] for e in frazetta), frazetta_results(frazetta, pool)))
+        found = search_all(entries)
         for entry, (offer, error) in ((e, found[e["key"]]) for e in entries):
             result = error or (describe(offer) + f"\n      {offer['url']}" if offer else "no listing")
             print(f"{entry['num']:>4}. {entry['label']}: {result}", flush=True)

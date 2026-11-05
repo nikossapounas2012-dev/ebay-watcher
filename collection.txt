@@ -1,0 +1,11 @@
+# My collection: what I own and what I paid, one item per line:
+#   Kind | the item's line from its list | £paid | date bought
+#   Kinds: Yu-Gi-Oh, MTG box, Sorcery, Frazetta, One Piece, One Piece PSA 10, One Piece box
+#   e.g.  Sorcery | Aino | Gothic | Foil | £40 | 2026-11-05
+#         One Piece box | Two Legends | OP08 | Two Legends | 68/23462/542504 | 18/753001 | £230 | 2026-11-05
+#   - easiest from Telegram: 'own S12 £40' (any watched number) adds the right line for you
+#   - Sorcery lines can be any card from Alpha, Beta, Arthurian Legends, Gothic or Dragonlord
+#     ('own Sorcery | Death Dealer | Beta | Standard | £25'); the price check then watches it too
+#   - 'sold C3' removes a line. The number is C + the line's position (C1, C2...).
+# Worth now: Cardmarket trend, else TCGplayer, else the cheapest eBay listing (shown on the website too).
+

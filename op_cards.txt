@@ -1,0 +1,380 @@
+# One Piece Card Game singles (English), one card version per line:
+#   Card name | Card number | Version | TCGplayer category/group/product
+#   - a listing counts if its title has the card number (OP05-119, OP05 119...) and the version's words:
+#     Alt Art: alt / alternate / aa / parallel | SP: sp / special
+#     Gold SP: sp + gold | Manga: manga | Super Alt Art: super + alt | Red Super Alt Art: red + super
+#     Wanted Poster: wanted | Full Art: full art | TR: tr / treasure
+#   - English, ungraded copies only: titles saying Japanese, PSA, BGS, CGC, graded... are skipped
+#   - every line is also watched as a PSA 10 copy: number G + the same position (P5 -> G5)
+#     (graded prices come from eBay only; TCGplayer and Cardmarket don't price graded cards)
+#   - reprints with the same number and version can't be told apart on eBay, so only the dearest is listed
+#   - TCGplayer only: Cardmarket lists every version of a card under the same name
+# Alert price (optional): add "| £90" at the end of a line and Telegram messages you when it is listed
+#   at or under £90. Adding or changing it keeps the line's history and number.
+# The number in Telegram is P + the line's position (P1, P2...) - add new lines at the END to keep numbers.
+# Generated from TCGplayer (via tcgcsv.com): every English card worth $40+ (about £30), promos, pre-release
+#   and tournament-stamped copies left out (they share the regular card number).
+
+[OP01 Romance Dawn]
+Roronoa Zoro | OP01-001 | Alt Art | 68/3188/454513
+Trafalgar Law | OP01-002 | Alt Art | 68/3188/454514
+Monkey.D.Luffy | OP01-003 | Alt Art | 68/3188/453506
+Sanji | OP01-013 | Alt Art | 68/3188/454530
+Nami | OP01-016 | Alt Art | 68/3188/454536
+Monkey.D.Luffy | OP01-024 | Alt Art | 68/3188/453509
+Roronoa Zoro | OP01-025 | Alt Art | 68/3188/453511
+Kouzuki Oden | OP01-031 | Alt Art | 68/3188/454552
+Trafalgar Law | OP01-047 | Alt Art | 68/3188/453515
+Donquixote Doflamingo | OP01-060 | Alt Art | 68/3188/454586
+Kaido | OP01-061 | Alt Art | 68/3188/454587
+Crocodile | OP01-062 | Alt Art | 68/3188/454589
+Dracule Mihawk | OP01-070 | Alt Art | 68/3188/454599
+Boa Hancock | OP01-078 | Alt Art | 68/3188/454609
+King | OP01-091 | Alt Art | 68/3188/454623
+Shanks | OP01-120 | Alt Art | 68/3188/454665
+Yamato | OP01-121 | Alt Art | 68/3188/454669
+
+[OP02 Paramount War]
+Edward.Newgate | OP02-001 | Alt Art | 68/17698/483470
+Monkey.D.Garp | OP02-002 | Alt Art | 68/17698/483627
+Portgas.D.Ace | OP02-013 | Alt Art | 68/17698/486333
+Sanji | OP02-026 | Alt Art | 68/17698/483628
+Nami | OP02-036 | Alt Art | 68/17698/482429
+Monkey.D.Luffy | OP02-062 | Alt Art | 68/17698/485814
+Smoker | OP02-093 | Alt Art | 68/17698/484476
+
+[OP03 Pillars of Strength]
+Eustass"Captain"Kid | OP01-051 | Wanted Poster | 68/22890/501677
+Portgas.D.Ace | OP03-001 | Alt Art | 68/22890/497934
+Nami | OP03-040 | Alt Art | 68/22890/498254
+Charlotte Katakuri | OP03-099 | Alt Art | 68/22890/498484
+Sogeking | OP03-122 | Alt Art Manga | 68/22890/500118
+Monkey.D.Luffy | ST01-012 | Wanted Poster | 68/22890/501678
+Donquixote Doflamingo | ST03-009 | Wanted Poster | 68/22890/501679
+Kaido | ST04-003 | Wanted Poster | 68/22890/501680
+
+[OP04 Kingdoms of Intrigue]
+Trafalgar Law | OP01-047 | SP | 68/23024/516554
+Boa Hancock | OP01-078 | SP | 68/23024/516555
+Edward.Newgate | OP02-004 | SP | 68/23024/516553
+Magellan | OP02-085 | SP | 68/23024/516556
+Sakazuki | OP02-099 | SP | 68/23024/516557
+Nefeltari Vivi | OP04-001 | Alt Art | 68/23024/510774
+Donquixote Doflamingo | OP04-019 | Alt Art | 68/23024/510897
+Rebecca | OP04-039 | Alt Art | 68/23024/510994
+Crocodile | OP04-058 | Alt Art | 68/23024/511766
+Sabo | OP04-083 | Alt Art Manga | 68/23024/516558
+
+[OP05 Awakening of the New Era]
+Nami | OP01-016 | SP | 68/23213/527035
+Yamato | OP01-121 | SP | 68/23213/527036
+Uta | OP02-120 | SP | 68/23213/527038
+Rob Lucci | OP03-092 | SP | 68/23213/527040
+Kaido | OP04-044 | SP | 68/23213/527041
+Belo Betty | OP05-002 | Alt Art | 68/23213/527008
+Monkey.D.Luffy | OP05-060 | Alt Art | 68/23213/527014
+Trafalgar Law | OP05-069 | Alt Art Manga | 68/23213/527019
+Eustass"Captain"Kid | OP05-074 | Alt Art Manga | 68/23213/527020
+Enel | OP05-098 | Alt Art | 68/23213/527021
+Enel | OP05-100 | SP | 68/23213/527043
+Monkey.D.Luffy | ST01-012 | Alt Art | 68/23213/527027
+
+[OP06 Wings of the Captain]
+Buggy | OP03-008 | SP | 68/23272/541665
+Charlotte Linlin | OP03-114 | SP | 68/23272/541666
+Sugar | OP04-024 | SP | 68/23272/541667
+Ms. All Sunday | OP04-064 | SP | 68/23272/541668
+Borsalino | OP05-051 | SP | 68/23272/541669
+Rebecca | OP05-091 | SP | 68/23272/541670
+Perona | OP06-021 | Alt Art | 68/23272/541044
+Yamato | OP06-022 | Alt Art | 68/23272/539490
+Roronoa Zoro | OP06-118 | Alt Art | 68/23272/541659
+Roronoa Zoro | OP06-118 | Alt Art Manga | 68/23272/541660
+Nami | ST01-007 | TR | 68/23272/541664
+
+[EB01 Extra Booster: Memorial Collection]
+Kouzuki Oden | EB01-001 | Alt Art | 68/23333/544524
+Tony Tony.Chopper | EB01-006 | Alt Art | 68/23333/544531
+Tony Tony.Chopper | EB01-006 | Alt Art Manga | 68/23333/544532
+Kouzuki Hiyori | EB01-013 | Alt Art | 68/23333/544541
+Laboon | EB01-048 | Alt Art | 68/23333/544584
+
+[OP07 500 Years in the Future]
+Okiku | OP01-035 | SP | 68/23387/545922
+Donquixote Doflamingo | OP01-073 | SP | 68/23387/545923
+Izo | OP03-003 | SP | 68/23387/545924
+Eustass"Captain"Kid | OP05-074 | SP | 68/23387/545926
+O-Nami | OP06-101 | SP | 68/23387/545927
+Boa Hancock | OP07-038 | Alt Art | 68/23387/545823
+Boa Hancock | OP07-051 | Alt Art | 68/23387/545841
+Trafalgar Law | ST10-010 | TR | 68/23387/555691
+
+[OP08 Two Legends]
+Portgas.D.Ace | OP02-013 | SP | 68/23462/558019
+Charlotte Pudding | OP03-112 | SP | 68/23462/558020
+Monkey.D.Luffy | OP07-109 | TR | 68/23462/564551
+Tony Tony.Chopper | OP08-001 | Alt Art | 68/23462/558022
+Charlotte Pudding | OP08-058 | Alt Art | 68/23462/558089
+Silvers Rayleigh | OP08-118 | Alt Art | 68/23462/558162
+Jewelry Bonney | ST02-007 | SP | 68/23462/558165
+Gecko Moria | ST03-004 | SP | 68/23462/558166
+Tashigi | ST06-006 | SP | 68/23462/558168
+
+[PRB-01 Premium Booster -The Best-]
+Tony Tony.Chopper | EB01-006 | Manga | 68/23496/587962
+Nami | OP01-016 | Manga | 68/23496/587966
+Shanks | OP01-120 | Manga | 68/23496/587708
+Sogeking | OP03-122 | Manga | 68/23496/587710
+Charlotte Katakuri | OP03-123 | Alt Art | 68/23496/586895
+Sabo | OP04-083 | Manga | 68/23496/587958
+Yamato | OP04-112 | Alt Art | 68/23496/586808
+Nico Robin | OP05-010 | Full Art | 68/23496/593435
+Trafalgar Law | OP05-069 | Manga | 68/23496/587959
+Eustass"Captain"Kid | OP05-074 | Manga | 68/23496/587960
+Shirahoshi | OP05-082 | Alt Art | 68/23496/593472
+Monkey.D.Luffy | OP05-119 | Alt Art | 68/23496/586960
+Monkey.D.Luffy | OP05-119 | Manga | 68/23496/587963
+Vinsmoke Reiju | OP06-068 | Full Art | 68/23496/593559
+Kouzuki Hiyori | OP06-106 | Alt Art | 68/23496/586547
+Roronoa Zoro | OP06-118 | Manga | 68/23496/587964
+Nami | P-053 | Full Art | 68/23496/593572
+Monkey.D.Luffy | P-055 | Full Art | 68/23496/593573
+Sanji | PRB01-001 | Alt Art | 68/23496/586608
+Tony Tony.Chopper | ST01-006 | Alt Art | 68/23496/593575
+Tony Tony.Chopper | ST01-006 | Full Art | 68/23496/593574
+Boa Hancock | ST03-013 | Alt Art | 68/23496/593586
+Boa Hancock | ST03-013 | Full Art | 68/23496/593585
+Trafalgar Law | ST10-010 | Alt Art | 68/23496/587398
+
+[OP09 Emperors in the New World]
+Donquixote Rosinante | OP04-119 | SP | 68/23589/596912
+Zoro-Juurou | OP05-067 | SP | 68/23589/596913
+Rob Lucci | OP05-093 | SP | 68/23589/596914
+Monkey.D.Luffy | OP05-119 | Wanted Poster | 68/23589/596915
+Monkey.D.Dragon | OP07-015 | SP | 68/23589/596916
+Boa Hancock | OP07-051 | SP | 68/23589/596917
+Nami | OP08-106 | SP | 68/23589/596918
+Shanks | OP09-004 | Manga | 68/23589/596925
+Shanks | OP09-004 | Wanted Poster | 68/23589/596927
+Buggy | OP09-042 | Alt Art | 68/23589/596971
+Buggy | OP09-051 | Manga | 68/23589/596984
+Buggy | OP09-051 | Wanted Poster | 68/23589/596986
+Monkey.D.Luffy | OP09-061 | Alt Art | 68/23589/596997
+Nico Robin | OP09-062 | Alt Art | 68/23589/596999
+Marshall.D.Teach | OP09-093 | Manga | 68/23589/597035
+Marshall.D.Teach | OP09-093 | Wanted Poster | 68/23589/597037
+Gol.D.Roger | OP09-118 | Alt Art | 68/23589/597066
+
+[ST-21 ST-21: Starter Deck 21 EX Gear 5]
+Monkey.D.Luffy | ST21-001 | Alt Art | 68/23991/615565
+
+[OP10 Royal Blood]
+Charlotte Flampe | EB01-056 | SP | 68/23766/617028
+Portgas.D.Ace | OP08-052 | TR | 68/23766/620135
+Divine Departure | OP10-019 | Alt Art | 68/23766/617054
+Trafalgar Law | OP10-022 | Alt Art | 68/23766/617058
+Trafalgar Law | OP10-119 | Manga | 68/23766/617173
+Charlotte Pudding | ST12-012 | SP | 68/23766/617174
+Sanji | ST14-003 | SP | 68/23766/617175
+Edward.Newgate | ST15-002 | SP | 68/23766/617176
+Uso-Hachi | ST18-001 | SP | 68/23766/617177
+
+[EB02 Extra Booster: Anime 25th Collection]
+Hannyabal | EB01-021 | SP | 68/23834/629087
+Kyros | EB01-040 | SP | 68/23834/629088
+Monkey.D.Luffy | EB02-010 | Alt Art | 68/23834/629101
+Nami | EB02-017 | Alt Art | 68/23834/629111
+Sanji & Pudding | EB02-035 | Alt Art | 68/23834/629132
+Monkey.D.Luffy | EB02-061 | Alt Art | 68/23834/629166
+Sabo | OP05-001 | SP | 68/23834/629168
+Belo Betty | OP05-002 | SP | 68/23834/629169
+Donquixote Rosinante | OP05-022 | SP | 68/23834/629170
+Monkey.D.Luffy | OP05-060 | SP | 68/23834/629171
+Enel | OP05-098 | SP | 68/23834/629172
+Hody Jones | OP06-020 | SP | 68/23834/629174
+Perona | OP06-021 | SP | 68/23834/629175
+Yamato | OP06-022 | SP | 68/23834/629176
+Vinsmoke Reiju | OP06-042 | SP | 68/23834/629177
+Monkey.D.Dragon | OP07-001 | SP | 68/23834/629179
+Jewelry Bonney | OP07-019 | SP | 68/23834/629180
+Boa Hancock | OP07-038 | SP | 68/23834/629181
+Foxy | OP07-059 | SP | 68/23834/629182
+Rob Lucci | OP07-079 | SP | 68/23834/629183
+Tony Tony.Chopper | OP08-001 | SP | 68/23834/629185
+Marco | OP08-002 | SP | 68/23834/629186
+Carrot | OP08-021 | SP | 68/23834/629187
+Kalgara | OP08-098 | SP | 68/23834/629190
+
+[OP11 A Fist of Divine Speed]
+Shirahoshi | EB01-057 | SP | 68/24241/632502
+Monkey.D.Luffy | OP05-119 | Gold SP | 68/24241/632504
+Monkey.D.Luffy | OP05-119 | SP | 68/24241/632503
+Sanji | OP06-119 | SP | 68/24241/632505
+Stussy | OP07-085 | SP | 68/24241/632506
+Silvers Rayleigh | OP09-005 | SP | 68/24241/632507
+Shirahoshi | OP11-022 | Alt Art | 68/24241/632383
+Monkey.D.Luffy | OP11-040 | Alt Art | 68/24241/632404
+Nami | OP11-041 | Alt Art | 68/24241/632406
+Gear Two | OP11-080 | Alt Art | 68/24241/632453
+Gum-Gum Fire-Fist Pistol Red Hawk | OP11-114 | Alt Art | 68/24241/632493
+Monkey.D.Luffy | OP11-118 | Manga | 68/24241/632499
+Shanks | ST16-004 | SP | 68/24241/632508
+Luffy-Tarou | ST18-005 | SP | 68/24241/632509
+
+[OP12 Legacy of the Master]
+Tashigi | OP06-050 | SP | 68/24302/646565
+Marshall.D.Teach | OP09-093 | Gold SP | 68/24302/646573
+Kuzan | OP10-082 | SP | 68/24302/646567
+Roronoa Zoro | OP12-020 | Alt Art | 68/24302/643748
+Perona | OP12-034 | Alt Art | 68/24302/643765
+Demon Aura Nine Sword Style Asura Blades Drawn Dead Man's Game | OP12-037 | Alt Art | 68/24302/643769
+Boeuf Burst | OP12-060 | Alt Art | 68/24302/643797
+Jewelry Bonney | OP12-118 | Manga | 68/24302/643867
+Portgas.D.Ace | ST13-011 | SP | 68/24302/646571
+Zoro-Juurou | ST18-004 | SP | 68/24302/646566
+
+[PRB-02 Premium Booster -The Best- Vol. 2]
+Monkey.D.Luffy | EB02-061 | SP | 68/24305/654533
+Shanks | OP06-007 | SP | 68/24305/654141
+Charlotte Pudding | OP06-047 | SP | 68/24305/654142
+Sanji | OP06-119 | Manga | 68/24305/654637
+Carrot | OP08-023 | SP | 68/24305/654143
+Come On!! We'll Fight You!! | OP09-020 | Alt Art | 68/24305/653833
+Cross Guild | OP09-057 | Alt Art | 68/24305/653834
+Roronoa Zoro | OP09-076 | Alt Art | 68/24305/654099
+Gum-Gum Giant | OP09-078 | Alt Art | 68/24305/653835
+Jesus Burgess | OP09-086 | Alt Art | 68/24305/654098
+My Era...Begins!! | OP09-096 | Alt Art | 68/24305/653836
+Trafalgar Law | OP10-119 | SP | 68/24305/654636
+Lucky.Roux | PRB02-003 | Alt Art | 68/24305/653262
+Marco | PRB02-008 | Alt Art | 68/24305/653586
+Boa Hancock | PRB02-017 | Alt Art | 68/24305/653858
+Shanks | ST16-004 | Alt Art | 68/24305/653839
+
+[OP13 Carrying On His Will]
+Portgas.D.Ace | EB02-028 | SP | 68/24303/654923
+Lilith | OP07-111 | SP | 68/24303/655081
+Sabo | OP07-118 | SP | 68/24303/655082
+Shanks | OP09-004 | Gold SP | 68/24303/657442
+Benn.Beckman | OP09-009 | SP | 68/24303/657444
+Monkey.D.Luffy | OP09-119 | SP | 68/24303/657448
+Smoker | OP10-030 | SP | 68/24303/657449
+Monkey.D.Luffy | OP13-001 | Alt Art | 68/24303/657251
+Divine Departure | OP13-076 | Alt Art | 68/24303/657341
+St. Ethanbaron V. Nusjuro | OP13-080 | Alt Art | 68/24303/657348
+St. Jaygarcia Saturn | OP13-083 | Alt Art | 68/24303/657354
+St. Shepherd Ju Peter | OP13-084 | Alt Art | 68/24303/657357
+St. Topman Warcury | OP13-089 | Alt Art | 68/24303/657364
+St. Marcus Mars | OP13-091 | Alt Art | 68/24303/657368
+Monkey.D.Luffy | OP13-118 | Alt Art | 68/24303/657403
+Monkey.D.Luffy | OP13-118 | Red Super Alt Art | 68/24303/657401
+Monkey.D.Luffy | OP13-118 | Super Alt Art | 68/24303/657402
+Monkey.D.Luffy | OP13-118 | Wanted Poster | 68/24303/657404
+Portgas.D.Ace | OP13-119 | Super Alt Art | 68/24303/657407
+Portgas.D.Ace | OP13-119 | Wanted Poster | 68/24303/657409
+Sabo | OP13-120 | Red Super Alt Art | 68/24303/657411
+Sabo | OP13-120 | Super Alt Art | 68/24303/657412
+Sabo | OP13-120 | Wanted Poster | 68/24303/657414
+
+[OP14-EB04 The Azure Sea's Seven]
+Kid & Killer | EB01-003 | SP | 68/24537/671449
+Rosinante & Law | EB04-038 | Alt Art | 68/24537/669240
+Eustass"Captain"Kid | EB04-039 | SP | 68/24537/671450
+Perona | OP06-093 | SP | 68/24537/671451
+Sengoku | OP07-046 | SP | 68/24537/671452
+Buggy | OP09-051 | Gold SP | 68/24537/671453
+Buggy | OP09-051 | SP | 68/24537/671454
+Sugar | OP10-065 | SP | 68/24537/671455
+Dracule Mihawk | OP12-030 | SP | 68/24537/671456
+Trafalgar Law | OP14-001 | Alt Art | 68/24537/666519
+Nami | OP14-031 | Alt Art | 68/24537/670254
+Boa Hancock | OP14-041 | Alt Art | 68/24537/668335
+Ms. All Sunday | OP14-084 | Alt Art | 68/24537/666913
+Ground Death | OP14-096 | Alt Art | 68/24537/670874
+Gecko Moria | OP14-104 | Alt Art | 68/24537/666575
+Boa Hancock | OP14-112 | Alt Art | 68/24537/668343
+Boa Hancock | OP14-112 | SP | 68/24537/671457
+You'll Frighten Me... | OP14-118 | Alt Art | 68/24537/670875
+Dracule Mihawk | OP14-119 | Manga | 68/24537/671448
+Crocodile | OP14-120 | Alt Art | 68/24537/668642
+Roronoa Zoro | PRB02-006 | SP | 68/24537/670642
+
+[EB03 Extra Booster: One Piece Heroines Edition]
+Uta | EB03-003 | SP | 68/24545/672820
+Tashigi | EB03-018 | SP | 68/24545/672821
+Nefeltari Vivi | EB03-024 | SP | 68/24545/672822
+Boa Hancock | EB03-026 | SP | 68/24545/672823
+Vinsmoke Reiju | EB03-031 | SP | 68/24545/672824
+Koala | EB03-042 | SP | 68/24545/672825
+Perona | EB03-045 | SP | 68/24545/672826
+Nami | EB03-053 | Alt Art | 68/24545/672805
+Nami | EB03-053 | SP | 68/24545/672827
+Nico Robin | EB03-055 | SP | 68/24545/672828
+Uta | EB03-061 | Manga | 68/24545/672817
+
+[OP15-EB04 Adventure on Kami's Island]
+Enel | EB02-052 | SP | 68/24637/685008
+Smoker & Tashigi | EB04-003 | SP | 68/24637/685482
+Roronoa Zoro | EB04-007 | Alt Art | 68/24637/685304
+Koby | EB04-044 | Manga | 68/24637/685313
+Borsalino | EB04-058 | Alt Art | 68/24637/685330
+Zeus | OP11-106 | SP | 68/24637/685009
+Boa Hancock | OP12-014 | SP | 68/24637/685011
+Trafalgar Law | OP13-031 | SP | 68/24637/685017
+Edward.Newgate | OP13-042 | SP | 68/24637/685019
+Brook | OP15-022 | Alt Art | 68/24637/685363
+Lightning Dragon | OP15-077 | Alt Art | 68/24637/685428
+Mamaragan | OP15-078 | Alt Art | 68/24637/685430
+Nami | OP15-086 | Alt Art | 68/24637/685439
+Monkey.D.Luffy | OP15-098 | Alt Art | 68/24637/685453
+Gum-Gum Golden Rifle | OP15-116 | Alt Art | 68/24637/685475
+Enel | OP15-118 | Manga | 68/24637/685479
+Sabo | P-105 | SP | 68/24637/685031
+Sabo | PRB02-014 | SP | 68/24637/685032
+Monkey.D.Luffy | ST26-005 | SP | 68/24637/685194
+
+[OP16 The Time of Battle]
+Bartholomew Kuma | EB04-054 | SP | 68/24664/695509
+Cavendish | OP10-045 | SP | 68/24664/695140
+Charlotte Katakuri | OP11-067 | SP | 68/24664/695325
+Tashigi | OP14-029 | SP | 68/24664/695117
+Ms. All Sunday | OP14-084 | SP | 68/24664/695324
+Kuzan | OP16-063 | Manga | 68/24664/696052
+Sakazuki | OP16-065 | Manga | 68/24664/695986
+Borsalino | OP16-073 | Manga | 68/24664/696108
+Yamato | OP16-079 | Alt Art | 68/24664/694068
+Zehahahahaha! | OP16-116 | Alt Art | 68/24664/696100
+Marshall.D.Teach | OP16-119 | Alt Art | 68/24664/695757
+Portgas.D.Ace | ST15-005 | SP | 68/24664/695508
+
+[ST-30 ST-30: Starter Deck 30 EX Luffy & Ace]
+Luffy & Ace | ST30-001 | Alt Art | 68/24678/693257
+
+[OP17 The World's Strongest Warriors]
+Roronoa Zoro | EB04-007 | SP | 68/24736/705991
+Monkey.D.Garp | OP12-056 | SP | 68/24736/712118
+Shanks | OP13-028 | SP | 68/24736/712119
+Silvers Rayleigh | OP14-108 | SP | 68/24736/712120
+Yamato | OP16-098 | SP | 68/24736/708067
+Edward.Newgate | OP17-005 | Manga | 68/24736/712083
+Shanks | OP17-022 | Manga | 68/24736/712084
+Are You That Afraid of the New Era?! | OP17-037 | Alt Art | 68/24736/711425
+Kaido | OP17-062 | Manga | 68/24736/712090
+Kaido | OP17-062 | Super Alt Art | 68/24736/712091
+Charlotte Linlin | OP17-112 | Manga | 68/24736/708072
+Rocks.D.Xebec | OP17-118 | Super Alt Art | 68/24736/712117
+Buggy | P-084 | SP | 68/24736/707315
+Gol.D.Roger | P-107 | SP | 68/24736/712121
+Marshall.D.Teach | ST27-005 | SP | 68/24736/707128
+Monkey.D.Luffy | ST31-004 | SP | 68/24736/712122
+Kouzuki Oden | ST32-002 | SP | 68/24736/712123
+
+[EB05 Extra Booster: One Piece Heroines Edition Vol. 2]
+Miss Buckingham Stussy | EB05-006 | SP | 68/24820/722703
+Shirahoshi | EB05-014 | Manga | 68/24820/718677
+Nico Robin | EB05-016 | SP | 68/24820/712885
+Vinsmoke Reiju | EB05-031 | SP | 68/24820/722712
+Perona | OP14-033 | SP | 68/24820/723138
+Gerd | OP17-081 | SP | 68/24820/723146
+Charlotte Pudding | OP17-109 | SP | 68/24820/722775
+Boa Hancock | ST17-004 | SP | 68/24820/722773

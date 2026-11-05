@@ -1,0 +1,40 @@
+# One Piece Card Game booster boxes (English), one per line:
+#   Set name | Set code | eBay names | TCGplayer category/group/product | Cardmarket game/product
+#   - a listing counts if its title has the set code (OP05, OP-05...) or one of the eBay names
+#     (separated by /), "booster" and "box" or "display" - and no card number (OP05-119 = a single card)
+#   - "-word" in the eBay names: the title must NOT have that word (e.g. -vol keeps Vol. 2 boxes apart)
+#   - only sealed (eBay condition "New") English boxes count: cases, Japanese / Asian boxes, double packs,
+#     sleeved packs, tins and opened or damaged boxes are skipped
+#   - TCGplayer and Cardmarket: the exact English booster box product (Cardmarket's non-English box is separate)
+# Alert price (optional): add "| £90" at the end of a line and Telegram messages you when it is listed
+#   at or under £90. Adding or changing it keeps the line's history and number.
+# The number in Telegram is PB + the line's position (PB1, PB2...) - add new lines at the END to keep numbers.
+# Generated from TCGplayer and Cardmarket: every English main set, Extra Booster and Premium Booster box.
+
+[Main sets]
+Romance Dawn | OP01 | Romance Dawn | 68/3188/557280 | 18/691244
+Paramount War | OP02 | Paramount War | 68/17698/455866 | 18/696241
+Pillars of Strength | OP03 | Pillars of Strength | 68/22890/477176 | 18/714443
+Kingdoms of Intrigue | OP04 | Kingdoms of Intrigue | 68/23024/485833 | 18/714444
+Awakening of the New Era | OP05 | Awakening of the New Era | 68/23213/498734 | 18/725745
+Wings of the Captain | OP06 | Wings of the Captain | 68/23272/515080 | 18/741105
+500 Years in the Future | OP07 | 500 Years in the Future / 500 Years into the Future | 68/23387/532106 | 18/750069
+Two Legends | OP08 | Two Legends | 68/23462/542504 | 18/753001
+Emperors in the New World | OP09 | Emperors in the New World | 68/23589/563834 | 18/768727
+Royal Blood | OP10 | Royal Blood | 68/23766/586671 | 18/802153
+A Fist of Divine Speed | OP11 | Fist of Divine Speed | 68/24241/620180 | 18/812462
+Legacy of the Master | OP12 | Legacy of the Master | 68/24302/628346 | 18/830647
+Carrying On His Will | OP13 | Carrying On His Will | 68/24303/628352 | 18/830651
+The Azure Sea's Seven | OP14 | Azure Sea's Seven / Azure Seas Seven | 68/24537/665598 | 18/864452
+Adventure on Kami's Island | OP15 | Adventure on Kami's Island / Kamis Island | 68/24637/682057 | 18/867939
+The Time of Battle | OP16 | Time of Battle | 68/24664/689336 | 18/867938
+The World's Strongest Warriors | OP17 | World's Strongest Warriors / Worlds Strongest Warriors | 68/24736/704752 | 18/873067
+The Dominance of God | OP18 | Dominance of God | 68/24833/712901 | 18/910146
+
+[Extra and Premium Boosters]
+Memorial Collection | EB01 | Memorial Collection | 68/23333/521161 | 18/750063
+Anime 25th Collection | EB02 | Anime 25th Collection | 68/23834/594069 | 18/809496
+One Piece Heroines Edition | EB03 | Heroines Edition -vol | 68/24545/666891 | 18/867331
+One Piece Heroines Edition Vol. 2 | EB05 | Heroines Edition Vol 2 / Heroines Edition Vol2 / Heroines Vol 2 / Heroines Vol2 | 68/24820/711385 | 18/884761
+Premium Booster -The Best- | PRB01 | Premium Booster / The Best -vol | 68/23496/545399 | 18/776438
+Premium Booster -The Best- Vol. 2 | PRB02 | Premium Booster Vol 2 / Premium Booster Vol2 / The Best Vol 2 / The Best Vol2 | 68/24305/628452 | 18/840415

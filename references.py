@@ -477,12 +477,13 @@ def update_sorcery(entries, state, matches, rates, log, tcg_updated):
 
 
 # ---------------- Frank Frazetta artwork ----------------
-def update_frazetta(entries, state, matches, rates, log, tcg_updated):
-    """Prices for the exact products named in frazetta.txt ("1/2576/456562" and "1/688249")."""
+def update_frazetta(entries, state, matches, rates, log, tcg_updated, name="frazetta", title="Frazetta"):
+    """Prices for the exact products named on each line ("1/2576/456562" and "1/688249").
+    Also used for One Piece (name="onepiece"): foil None = whichever TCGplayer price exists."""
     rows = []
 
     # TCGplayer: category/group/product; foil lines use the Foil price
-    if tcg_updated and tcg_updated != state.get("tcgplayer_frazetta"):
+    if tcg_updated and tcg_updated != state.get(f"tcgplayer_{name}"):
         wanted = {e["key"]: e["tcgplayer"].split("/") for e in entries if e["tcgplayer"].count("/") == 2}
         prices = collections.defaultdict(list)
         for cat, group in sorted({(c, g) for c, g, _ in wanted.values()}):
@@ -496,7 +497,10 @@ def update_frazetta(entries, state, matches, rates, log, tcg_updated):
                 continue
             product = wanted[e["key"]][2]
             options = prices.get(product, [])
-            pr = next((x for x in options if x["subTypeName"] == ("Foil" if e["foil"] else "Normal")), None)
+            if e["foil"] is None:      # One Piece: a card is either "Normal" or "Foil" on TCGplayer
+                pr = max(options, key=lambda x: bool(x.get("marketPrice") or x.get("lowPrice")), default=None)
+            else:
+                pr = next((x for x in options if x["subTypeName"] == ("Foil" if e["foil"] else "Normal")), None)
             matches.setdefault(e["key"], {})["tcgplayer"] = {"product": int(product),
                                                              "note": "" if pr else "no TCGplayer price"}
             if not pr or not (pr.get("marketPrice") or pr.get("lowPrice")):
@@ -504,15 +508,15 @@ def update_frazetta(entries, state, matches, rates, log, tcg_updated):
             matched += 1
             rows.append([day, e["key"], "tcgplayer", product, round2((pr.get("marketPrice") or 0) * to_gbp),
                          round2((pr.get("lowPrice") or 0) * to_gbp), None])
-        log(f"references: TCGplayer Frazetta {day} - {matched} of {len(entries)} priced")
-        state["tcgplayer_frazetta"] = tcg_updated
+        log(f"references: TCGplayer {title} {day} - {matched} of {len(entries)} priced")
+        state[f"tcgplayer_{name}"] = tcg_updated
 
     # Cardmarket: game/product; one product per card, foil prices in the "-foil" fields
     wanted = {e["key"]: e["cardmarket"].split("/") for e in entries if e["cardmarket"].count("/") == 1}
     games = sorted({g for g, _ in wanted.values()})
     guides = {g: f"{CM_FILES}/priceGuide/price_guide_{g}.json" for g in games}
     stamps = {g: get(url, method="HEAD").headers.get("Last-Modified", "") for g, url in guides.items()}
-    if any(not v or v != state.get(f"cardmarket_frazetta_{g}") for g, v in stamps.items()):
+    if any(not v or v != state.get(f"cardmarket_{name}_{g}") for g, v in stamps.items()):
         prices, day = {}, ""
         for g, url in guides.items():
             guide = get_json(url, timeout=300)
@@ -536,14 +540,14 @@ def update_frazetta(entries, state, matches, rates, log, tcg_updated):
             conv = lambda v: round2(v * to_gbp) if v else None
             rows.append([day, e["key"], "cardmarket", product, conv(g.get("trend" + f)), conv(g.get("low" + f)),
                          conv(g.get("avg30" + f))])
-        log(f"references: Cardmarket Frazetta {day} - {matched} of {len(entries)} priced")
+        log(f"references: Cardmarket {title} {day} - {matched} of {len(entries)} priced")
         for g, v in stamps.items():
-            state[f"cardmarket_frazetta_{g}"] = v
+            state[f"cardmarket_{name}_{g}"] = v
     return rows
 
 
 # ---------------- entry point ----------------
-def update(cards, data_dir, overrides_file, log, boxes=(), sorcery=(), frazetta=()):
+def update(cards, data_dir, overrides_file, log, boxes=(), sorcery=(), frazetta=(), onepiece=()):
     """Save today's Cardmarket and TCGplayer prices, if they changed since the last save."""
     history = data_dir / "reference_history.csv"
     state_file = data_dir / "reference_state.json"
@@ -574,7 +578,10 @@ def update(cards, data_dir, overrides_file, log, boxes=(), sorcery=(), frazetta=
                         ("Sorcery", lambda: update_sorcery(list(sorcery), state, matches, rates, log,
                                                            tcg_updated) if sorcery else []),
                         ("Frazetta", lambda: update_frazetta(list(frazetta), state, matches, rates, log,
-                                                             tcg_updated) if frazetta else [])):
+                                                             tcg_updated) if frazetta else []),
+                        ("One Piece", lambda: update_frazetta(list(onepiece), state, matches, rates, log,
+                                                              tcg_updated, "onepiece", "One Piece")
+                                              if onepiece else [])):
         try:
             rows += run()
         except Exception as e:     # one source failing should not stop the other
@@ -583,7 +590,7 @@ def update(cards, data_dir, overrides_file, log, boxes=(), sorcery=(), frazetta=
         return
 
     data_dir.mkdir(parents=True, exist_ok=True)
-    keys = {c["key"] for c in list(cards) + list(boxes) + list(sorcery) + list(frazetta)}
+    keys = {c["key"] for c in list(cards) + list(boxes) + list(sorcery) + list(frazetta) + list(onepiece)}
     matches = {k: v for k, v in matches.items() if k in keys}
     new_file = not history.exists()
     with history.open("a", newline="", encoding="utf-8") as f:

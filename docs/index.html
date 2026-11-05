@@ -58,7 +58,7 @@ h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
 .tabs button { font: inherit; font-weight: 600; font-size: 14px; color: var(--muted); background: none; border: 0;
   border-radius: 7px; padding: 7px 14px; cursor: pointer; }
 .tabs button[aria-selected="true"] { background: var(--line); color: #fff; }
-.list.boxes .row, .list.sorcery .row, .list.frazetta .row { grid-template-columns: 36px minmax(0, 1fr) 168px repeat(4, 88px); }
+.list.boxes .row, .list.sorcery .row, .list.frazetta .row, .list.opboxes .row, .list.collection .row { grid-template-columns: 36px minmax(0, 1fr) 168px repeat(4, 88px); }
 .row {
   display: grid; grid-template-columns: 36px minmax(0, 1fr) 168px 92px 104px 104px;
   gap: 12px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--border);
@@ -93,6 +93,9 @@ h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
   padding: 1px 6px; border-radius: 99px; margin-left: 4px; vertical-align: 1px;
 }
 .chg-down { color: var(--low); } .chg-up { color: var(--up); }
+.price.paid b { color: var(--text); }
+.price.mkt b.ebay { color: var(--now); }
+.price.gain b.up { color: var(--low); } .price.gain b.down { color: var(--up); }
 .spark, .sparkslot { display: block; width: 168px; height: 44px; }
 .detail { padding: 4px 16px 20px; border-top: 1px dashed var(--border); background: var(--panel); }
 .detail .big { width: 100%; height: 240px; display: block; touch-action: pan-y; }
@@ -120,7 +123,7 @@ td.r, th.r { text-align: right; }
   .row .sparkslot, .row .spark { grid-area: spark; width: 100%; }
   .row .now { grid-area: now; text-align: left; } .row .low { grid-area: low; text-align: left; }
   .row .mkt { grid-area: mkt; text-align: left; }
-  .list.boxes .row, .list.sorcery .row, .list.frazetta .row {
+  .list.boxes .row, .list.sorcery .row, .list.frazetta .row, .list.opboxes .row, .list.collection .row {
     grid-template-columns: 22px repeat(4, minmax(0, 1fr)); grid-template-areas:
       "num name name name name" ". spark spark spark spark" ". now low mkt mkt2";
   }
@@ -140,6 +143,9 @@ td.r, th.r { text-align: right; }
     <button role="tab" data-mode="boxes">MTG booster boxes</button>
     <button role="tab" data-mode="sorcery">Sorcery Uniques</button>
     <button role="tab" data-mode="frazetta">Frank Frazetta</button>
+    <button role="tab" data-mode="onepiece">One Piece cards</button>
+    <button role="tab" data-mode="opboxes">One Piece boxes</button>
+    <button role="tab" data-mode="collection">My collection</button>
   </div>
 
   <div class="stats" id="stats"></div>
@@ -178,11 +184,13 @@ const SOURCES = {
 };
 const DEAL = 0.8;   // an eBay price at or under 80% of the market price counts as a deal
 const SVG = "http://www.w3.org/2000/svg";
-const data = { cards: [], boxes: [], sorcery: [], frazetta: [] };
-const MODES = ["cards", "boxes", "sorcery", "frazetta"];
+const data = { cards: [], boxes: [], sorcery: [], frazetta: [], onepiece: [], opboxes: [], collection: [] };
+const MODES = ["cards", "boxes", "sorcery", "frazetta", "onepiece", "opboxes", "collection"];
+const GRADED = "PSA 10";   // OP_GRADED in ebay_watch.py
 let mode = MODES.includes(location.hash.slice(1)) ? location.hash.slice(1) : "cards";
 // boxes and Sorcery Uniques compare the lowest listing on each site; cards compare with the market price
-const compare = (c) => c.kind !== "card";
+// boxes, Sorcery, Frazetta: each site's lowest listing; Yu-Gi-Oh! and One Piece singles: the market price
+const compare = (c) => ["box", "sorcery", "frazetta", "opbox"].includes(c.kind);
 let cards = [];          // the list being shown
 const open = new Set();
 
@@ -279,6 +287,60 @@ function parseBoxes(text) {
   return out;
 }
 
+// same rules as load_op_cards() in ebay_watch.py: P1, P2... and each card's PSA 10 copy G1, G2...
+function parseOpCards(text) {
+  const out = []; let section = "", n = 0;
+  for (let line of (text || "").split(/\r?\n/)) {
+    line = line.trim();
+    if (!line || line.startsWith("#")) continue;
+    if (line.startsWith("[") && line.endsWith("]")) { section = line.slice(1, -1).trim(); continue; }
+    let target; [line, target] = splitTarget(line);
+    const p = line.split("|").map((s) => s.trim()).concat(["", "", ""]);
+    n++;
+    const base = { section, name: p[0], code: p[1].toUpperCase(), rarity: p[2], edition: "" };
+    out.push({ ...base, n: "P" + n, kind: "opcard", key: line, meta: withTarget(`${base.code} · ${p[2]}`, target) });
+    out.push({ ...base, n: "G" + n, kind: "opgraded", key: `${line} | ${GRADED}`, imgKey: line,
+               meta: `${base.code} · ${p[2]} · ${GRADED}` });
+  }
+  return out;
+}
+
+// same rules as load_op_boxes() in ebay_watch.py: PB1, PB2...
+function parseOpBoxes(text) {
+  const out = []; let section = "";
+  for (let line of (text || "").split(/\r?\n/)) {
+    line = line.trim();
+    if (!line || line.startsWith("#")) continue;
+    if (line.startsWith("[") && line.endsWith("]")) { section = line.slice(1, -1).trim(); continue; }
+    let target; [line, target] = splitTarget(line);
+    const p = line.split("|").map((s) => s.trim()).concat(["", ""]);
+    out.push({ n: "PB" + (out.length + 1), kind: "opbox", section, name: p[0], code: p[1].toUpperCase(),
+               rarity: "Booster box", edition: "", key: line, meta: withTarget(`${p[1].toUpperCase()} · booster box`, target) });
+  }
+  return out;
+}
+
+// same rules as parse_collection_line() in ebay_watch.py: "Kind | line from its list | £paid | date"
+const COLLECTION_KINDS = { "yu-gi-oh": "card", "mtg box": "box", "sorcery": "sorcery", "frazetta": "frazetta",
+  "one piece": "opcard", "one piece psa 10": "opgraded", "one piece box": "opbox" };
+const KIND_LABEL = { card: "Yu-Gi-Oh!", box: "MTG box", sorcery: "Sorcery", frazetta: "Frazetta",
+  opcard: "One Piece", opgraded: "One Piece", opbox: "One Piece box" };
+function parseCollection(text) {
+  const out = [];
+  for (let line of (text || "").split(/\r?\n/)) {
+    line = line.trim();
+    if (!line || line.startsWith("#") || (line.startsWith("[") && line.endsWith("]"))) continue;
+    const p = line.split("|").map((s) => s.trim());
+    const at = p.findIndex((x) => /^£\s*\d+(\.\d+)?$/.test(x));
+    const kind = COLLECTION_KINDS[p[0].toLowerCase()];
+    if (!kind || at < 2) continue;
+    let key = p.slice(1, at).join(" | ");
+    if (kind === "opgraded") key += ` | ${GRADED}`;
+    out.push({ n: "C" + (out.length + 1), kind, key, paid: parseFloat(p[at].slice(1)), date: p[at + 1] || "" });
+  }
+  return out;
+}
+
 function parseCSV(text) {
   const rows = []; let row = [], field = "", q = false;
   for (let i = 0; i < text.length; i++) {
@@ -345,7 +407,8 @@ function build(list, { prices, matches, hist, refs }) {
     c.deal = c.vsMarket !== null && c.vsMarket <= DEAL - 1;
     c.search = `${c.n} ${c.name} ${c.code} ${c.rarity} ${c.section} ${c.game || ""}`.toLowerCase();
     // picture: TCGplayer's product image where matched, else the cheapest eBay listing's photo
-    const tcg = c.matches.tcgplayer && c.matches.tcgplayer.product;
+    const im = c.imgKey ? matches[c.imgKey] || {} : c.matches;
+    const tcg = im.tcgplayer && im.tcgplayer.product;
     c.image = tcg ? `https://tcgplayer-cdn.tcgplayer.com/product/${encodeURIComponent(tcg)}_200w.jpg`
       : (cur && cur.image) || "";
     c.cheapest = compare(c) && cur && Object.values(c.latest).every((r) => r.low == null || cur.price <= r.low);
@@ -547,6 +610,31 @@ function rowHTML(c) {
       : `<span class="price mkt">${mkt}</span>`}`;
 }
 
+// worth now: Cardmarket trend, else TCGplayer (not for Yu-Gi-Oh!, where it is often another edition), else eBay
+function worth(c) {
+  const src = ["cardmarket", "tcgplayer"].find((s) => c.latest[s]?.price && !(s === "tcgplayer" && c.kind === "card"));
+  if (src) return { price: c.latest[src].price, label: SOURCES[src].label, cls: src };
+  return c.current ? { price: c.current.price, label: "eBay now", cls: "ebay" } : null;
+}
+
+function collectionRowHTML(c) {
+  const w = worth(c);
+  const now = c.current ? `<b>${gbp(c.current.price)}</b><small>eBay now</small>`
+    : `<b class="none">not listed</b><small>eBay</small>`;
+  const val = w ? `<b class="${w.cls}">${gbp(w.price)}</b><small>${esc(w.label)}</small>` : `<b class="none">–</b><small>no price yet</small>`;
+  const gain = w ? w.price - c.paid : null;
+  const g = gain === null ? `<b class="none">–</b>`
+    : `<b class="${gain >= 0 ? "up" : "down"}">${gain >= 0 ? "+" : "−"}${gbp(Math.abs(gain))}</b><small>${gain >= 0 ? "▲" : "▼"}${pct(gain / c.paid)}</small>`;
+  return `<span class="num">${c.n}</span>
+    <span class="who">${c.image ? `<img class="thumb" src="${esc(c.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : '<span class="thumb"></span>'}
+      <span><span class="name">${esc(c.name)}</span><span class="meta">${esc(c.meta)}</span></span></span>
+    <span class="sparkslot"></span>
+    <span class="price now">${now}</span>
+    <span class="price mkt">${val}</span>
+    <span class="price paid"><b>${gbp(c.paid)}</b><small>paid${c.date ? " · " + esc(fmtDay(new Date(c.date))) : ""}</small></span>
+    <span class="price gain">${g}</span>`;
+}
+
 function refHTML(c, s) {
   const r = c.latest[s], m = c.matches[s] || {};
   const label = `<b style="color:${SOURCES[s].color}">${SOURCES[s].label}</b>`;
@@ -554,8 +642,9 @@ function refHTML(c, s) {
   const extra = [r.avg30 !== null ? `30-day avg ${gbp(r.avg30)}` : "", r.low !== null ? `lowest listing ${gbp(r.low)}` : ""]
     .filter(Boolean).join(" · ");
   const game = c.kind === "frazetta" ? (c.game === "MTG" ? "Magic" : "Sorcery")
-    : { box: "Magic", sorcery: "Sorcery", card: "YuGiOh" }[c.kind];
-  const query = c.kind === "box" ? `${c.name} ${c.rarity} Booster Box` : c.name;
+    : { box: "Magic", sorcery: "Sorcery", card: "YuGiOh", opcard: "OnePiece", opgraded: "OnePiece", opbox: "OnePiece" }[c.kind];
+  const query = c.kind === "box" ? `${c.name} ${c.rarity} Booster Box` : c.kind === "opbox" ? `${c.name} Booster Box`
+    : c.kind.startsWith("op") ? `${c.name} ${c.code}` : c.name;
   const url = s === "tcgplayer" ? `https://www.tcgplayer.com/product/${encodeURIComponent(r.product)}`
     : `https://www.cardmarket.com/en/${game}/Products/Search?searchString=${encodeURIComponent(query)}`;
   const note = c.kind === "box" && s === "cardmarket" ? " · lowest is any language" : "";
@@ -594,7 +683,13 @@ function render() {
 
   const list = $("list"); list.innerHTML = "";
   list.className = "list " + mode;
-  if (!rows.length) { list.innerHTML = `<div class="msg">No ${mode === "boxes" ? "boxes" : "cards"} match.</div>`; return; }
+  if (!rows.length) {
+    list.innerHTML = mode === "collection" && !cards.length
+      ? `<div class="msg">Nothing in your collection yet. In Telegram send e.g. <b>own S12 £40</b> (any number from the other tabs)
+         or <b>own Sorcery | Death Dealer | Beta | Standard | £25</b> (any Sorcery card), or edit collection.txt.</div>`
+      : `<div class="msg">No ${/box/.test(mode) ? "boxes" : "cards"} match.</div>`;
+    return;
+  }
   let shown = null;
   for (const c of rows) {
     if (sort === "num" && c.section !== shown) {
@@ -602,7 +697,7 @@ function render() {
       list.appendChild(h); shown = c.section;
     }
     const b = document.createElement("button");
-    b.className = "row"; b.innerHTML = rowHTML(c);
+    b.className = "row"; b.innerHTML = mode === "collection" ? collectionRowHTML(c) : rowHTML(c);
     b.setAttribute("aria-expanded", open.has(c.n));
     list.appendChild(b);
     const slot = b.querySelector(".sparkslot");
@@ -619,7 +714,22 @@ function render() {
   }
 }
 
+function collectionStats() {
+  let paid = 0, value = 0, none = 0;
+  for (const c of cards) { const w = worth(c); if (w) { paid += c.paid; value += w.price; } else none++; }
+  const gain = value - paid;
+  $("stats").innerHTML = [
+    [cards.length, "items owned"],
+    [gbp(paid), "paid" + (none ? ` (${none} unpriced left out)` : "")],
+    [gbp(value), "worth now"],
+    [`<span style="color:var(${gain >= 0 ? "--low" : "--up"})">${gain >= 0 ? "+" : "−"}${gbp(Math.abs(gain))}</span>`,
+     paid ? `${gain >= 0 ? "gain" : "loss"} (${pct(gain / paid)})` : "gain / loss"],
+  ].map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
+  $("foot").textContent = "Worth now: Cardmarket trend, else TCGplayer market price (not for Yu-Gi-Oh!, where TCGplayer is often a different edition), else the cheapest eBay listing. Graded One Piece cards: eBay only. Add or remove items in Telegram ('own S12 £40', 'sold C3') or in collection.txt.";
+}
+
 function stats() {
+  if (mode === "collection") return collectionStats();
   const listed = cards.filter((c) => c.current);
   const atLow = cards.filter((c) => c.atLow).length;
   const deals = cards.filter((c) => c.deal).length;
@@ -627,14 +737,18 @@ function stats() {
   const firstSeen = cards.flatMap((c) => c.points.map((p) => p.t)).reduce((m, t) => (!m || t < m ? t : m), null);
   $("stats").innerHTML = [
     [cards.length, { cards: "printings watched", boxes: "boxes watched", sorcery: "Uniques watched",
-                     frazetta: "Frazetta printings" }[mode]],
+                     frazetta: "Frazetta printings", onepiece: "cards + PSA 10 copies", opboxes: "boxes watched" }[mode]],
     [listed.length, "listed now"],
     [atLow, "at their lowest now"],
     [deals, `${pct(1 - DEAL)}+ under market`],
     [listed.length ? fmt(last) : "–", "last check"],
   ].map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
   $("foot").textContent = (firstSeen ? `eBay prices recorded since ${fmt(firstSeen, true)}. Lowest found is the cheapest listing seen at any check — it may have sold since. ` : "")
-    + (mode === "frazetta"
+    + (mode === "onepiece"
+      ? "Every English One Piece card worth about £30+ on TCGplayer, by version (Alt Art, SP, Manga…), plus its PSA 10 copy (G numbers). eBay: UK Buy It Now listings with the card number and the version's words, postage included; Japanese and other graders skipped. Market: TCGplayer market price of that exact version (Cardmarket lists every version under one name). Graded copies: eBay only."
+      : mode === "opboxes"
+      ? "eBay: sealed (New) English booster boxes, postage included; cases, Japanese/Asian boxes and double packs skipped. Cardmarket and TCGplayer: lowest listing of the English box, without postage. Converted to pounds at that day's ECB rate."
+      : mode === "frazetta"
       ? "Every printing with Frank Frazetta's art: MTG Secret Lair cards and Sorcery (Alpha + promos; the Beta reprints have other artists). eBay titles must name Frazetta (MTG) or Alpha/Frazetta/promo (Sorcery). Cardmarket and TCGplayer: lowest listing of that exact product, without postage. Converted to pounds at that day's ECB rate."
       : mode === "sorcery"
       ? "eBay: every UK Buy It Now listing naming the card, postage included; foil and non-foil apart. Cardmarket and TCGplayer: lowest listing, without postage. \"Under\" compares eBay with the Cardmarket trend. Converted to pounds at that day's ECB rate."
@@ -645,9 +759,11 @@ function stats() {
 
 async function load() {
   try {
-    const [cardText, boxText, sorceryText, frazettaText, historyText, pricesText, refText, matchesText] = await Promise.all([
+    const [cardText, boxText, sorceryText, frazettaText, opCardText, opBoxText, collectionText,
+           historyText, pricesText, refText, matchesText] = await Promise.all([
       getText("main/ebay_cards.txt"), getText("main/mtg_boxes.txt"), getText("main/sorcery_uniques.txt"),
-      getText("main/frazetta.txt"),
+      getText("main/frazetta.txt"), getText("main/op_cards.txt"), getText("main/op_boxes.txt"),
+      getText("main/collection.txt"),
       getText("data/ebay_history.csv"),
       getText("data/ebay_prices.json"), getText("data/reference_history.csv"), getText("data/reference_matches.json")]);
     if (!cardText) throw new Error("ebay_cards.txt not found");
@@ -656,6 +772,22 @@ async function load() {
     data.boxes = build(parseBoxes(boxText), parsed);
     data.sorcery = build(parseSorcery(sorceryText), parsed);
     data.frazetta = build(parseFrazetta(frazettaText), parsed);
+    data.onepiece = build(parseOpCards(opCardText), parsed);
+    data.opboxes = build(parseOpBoxes(opBoxText), parsed);
+    // collection: each line points at a watched item; Sorcery cards outside the Uniques list get their own
+    const byKey = new Map(Object.entries(data).filter(([m]) => m !== "collection").flatMap(([, l]) => l.map((c) => [c.key, c])));
+    data.collection = parseCollection(collectionText).map((it) => {
+      let base = byKey.get(it.key);
+      if (!base && it.kind === "sorcery") {
+        const p = it.key.split("|").map((x) => x.trim());
+        const foil = (p[2] || "").toLowerCase() === "foil";
+        base = build([{ n: it.n, kind: "sorcery", section: "", name: p[0], code: p[1] || "", rarity: foil ? "Foil" : "Standard",
+                        edition: "", key: it.key, meta: `${p[1]} · ${foil ? "Foil" : "Standard"}` }], parsed)[0];
+      }
+      if (!base) return null;
+      return { ...base, ...it, section: KIND_LABEL[it.kind], origN: base.n,
+               meta: `${base.meta}${base.n !== it.n ? " · " + base.n : ""}` };
+    }).filter(Boolean);
     setMode(mode);
   } catch (e) {
     $("list").innerHTML = `<div class="msg">Could not load prices: ${esc(e.message)}</div>`;
@@ -678,6 +810,14 @@ const LEGENDS = {
 };
 LEGENDS.sorcery = LEGENDS.boxes.replace("Tap a box", "Tap a card");
 LEGENDS.frazetta = LEGENDS.sorcery;
+LEGENDS.opboxes = LEGENDS.boxes;
+LEGENDS.onepiece = `<span><i style="background:var(--now)"></i>Current lowest</span>
+    <span><i style="background:var(--low)"></i>Lowest found</span>
+    <span><i class="ln" style="color:var(--tcg)"></i>TCGplayer market</span>
+    <span>G rows: PSA 10 copies (eBay only)</span>
+    <span>Tap a card for its full chart</span>`;
+LEGENDS.collection = `<span><b>Worth</b>: Cardmarket, else TCGplayer, else eBay now</span>
+    <span><b>Gain</b>: worth − paid</span><span>Tap an item for its full chart</span>`;
 
 function setMode(m) {
   mode = m;
@@ -687,7 +827,10 @@ function setMode(m) {
   $("legend").innerHTML = LEGENDS[mode];
   $("q").placeholder = { cards: "Search card, set code or number", boxes: "Search set, set code or number (B1…)",
                          sorcery: "Search card, set, foil or number (S1…)",
-                         frazetta: "Search card, MTG / Sorcery, foil or number (F1…)" }[mode];
+                         frazetta: "Search card, MTG / Sorcery, foil or number (F1…)",
+                         onepiece: "Search card, number (OP05-119), version or P1 / G1…",
+                         opboxes: "Search set, set code or number (PB1…)",
+                         collection: "Search your collection" }[mode];
   const secs = [...new Set(cards.map((c) => c.section))].filter(Boolean);
   $("section").innerHTML = '<option value="">All sections</option>' + secs.map((s) => `<option>${esc(s)}</option>`).join("");
   stats(); render();

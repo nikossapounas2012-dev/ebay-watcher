@@ -1,6 +1,6 @@
 name: Dry run
 
-# Searches eBay and prints the cheapest match for each line of ebay_cards.txt / mtg_boxes.txt.
+# Searches eBay and prints the cheapest match for each line of the chosen list.
 # Saves nothing and sends nothing - use it to check a new list before the real checks pick it up.
 
 on:
@@ -9,8 +9,8 @@ on:
       what:
         description: "Which list to search"
         type: choice
-        options: [frazetta, boxes, sorcery, cards, all]
-        default: boxes
+        options: [onepiece, opboxes, collection, frazetta, boxes, sorcery, cards, all]
+        default: onepiece
 
 jobs:
   dry-run:
