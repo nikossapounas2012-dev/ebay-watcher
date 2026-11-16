@@ -450,6 +450,114 @@ def ai_brief(stories, now, single, title, description):
     return "\n".join(lines) + "\n"
 
 
+# ---------------- Canva (Bulk Create data + instructions) ----------------
+def canva_rows(stories, now, single):
+    """One row per item page, for Canva's Bulk Create (Apps -> Bulk create -> upload CSV)."""
+    rows = []
+    for i, s in enumerate(stories, 1):
+        e = s["entry"]
+        since = "this week" if s["since"] <= now - timedelta(days=DAYS) + timedelta(hours=1) \
+            else f"since {s['since']:%-d %b}"
+        word = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][i - 1]
+        voice = (f"{'' if single else f'Number {word}: '}{e['name']}{', ' + short_meta(e) if short_meta(e) else ''}. "
+                 f"Cheapest UK listing went from {say_money(s['before'])} to {say_money(s['now'])}, "
+                 f"{'down' if s['change'] < 0 else 'up'} {abs(s['change']):.0%} {since}."
+                 + (f" {s['market'][1]} has it at {say_money(s['market'][0])}." if s["market"] else ""))
+        rows.append({
+            "rank": "" if single else f"#{i}",
+            "game": GAME.get(e["kind"], e.get("game", "")),
+            "card": e["name"],
+            "version": short_meta(e),
+            "was": gbp(s["before"]),
+            "now": gbp(s["now"]),
+            "change": f"{'▼' if s['change'] < 0 else '▲'} {abs(s['change']):.0%} {since}",
+            "direction": "DOWN" if s["change"] < 0 else "UP",
+            "market": f"{s['market'][1]} {gbp(s['market'][0])}" if s["market"] else "",
+            "lowest": gbp(s["lowest"]),
+            "chart_image": f"chart_{i}.png",
+            "voiceover": voice,
+        })
+    return rows
+
+
+def canva_guide(stories, now, single, title, description, rows):
+    n = len(rows)
+    first = f"UK card prices · {now:%-d %b}" if not single else rows[0]["card"]
+    lines = [
+        f"# Canva: \"{title}\"",
+        "",
+        "Files: canva-bulk.csv (the data), chart_1.png ... (one picture per item: card + real price chart).",
+        "",
+        "## Option A - Bulk Create (exact numbers, recommended)",
+        "1. Canva -> Create a design -> **Mobile Video** (1080 x 1920). Add 3 pages.",
+        "2. **Page 1 (intro, 2.5 s)**: dark background #111317, big white text "
+        f"\"{first}\", smaller orange (#f29a45) text \"{'Top ' + str(n) + ' price moves on eBay UK' if not single else 'big UK price move'}\".",
+        "3. **Page 2 (the item template, 5.5 s)** - add these text boxes and an image frame:",
+        "   - small grey text `{rank}  ·  {game}` at the top",
+        "   - big bold white text `{card}`, grey text `{version}` under it",
+        "   - an image frame filling the middle (for the chart picture)",
+        "   - big bold white `{was}  →  {now}`",
+        "   - bold `{change}` - colour it green #4cc584 (drops) or red #f07070 (rises); see the direction column",
+        "   - small grey `{market}`",
+        "4. Apps -> **Bulk create** -> Upload data -> canva-bulk.csv. Connect each text box to the column with the "
+        "same name (right-click the box -> Connect data). Connect the image frame to `chart_image` and upload the "
+        "chart_N.png files when Canva asks for them (or drop each picture into its page afterwards).",
+        f"5. Continue -> Generate: Canva makes {n} item page{'s' * (n != 1)}. Copy them into the video between "
+        "page 1 and the end page.",
+        "6. **Last page (3 s)**: \"Charts for every card\" + nikossapounas2012-dev.github.io/ebay-watcher + small "
+        "\"Asking prices, not sales. Not financial advice.\"",
+        "7. Animate: page transitions *Dissolve* or *Slide*; on each item page animate the price text with *Rise* "
+        "and give the chart picture a slow *Zoom in* (Pan). Recolour any `{change}` text whose direction is UP to red.",
+        "8. Voice: use the `voiceover` column - record it yourself (Record yourself / Audio), or paste it into a "
+        "text-to-speech app from Canva's Apps panel. Add music from Canva's Audio tab (keep it quiet under the voice).",
+        "9. Captions: turn on auto-captions if your Canva has them, or add the voiceover lines as text.",
+        "10. Download -> MP4, 1080p. Upload to YouTube Shorts with the title and description below.",
+        "",
+        "## Option B - Canva AI (faster, check every number afterwards)",
+        "Upload the chart_N.png pictures first, then paste this into Canva AI / Magic Design:",
+        "",
+        "> " + (
+            f"Create a {8 + 5 * n}-second vertical 9:16 video for YouTube Shorts called \"{title.replace(' #shorts', '')}\". "
+            "Dark background #111317, white text, orange accent #f29a45, green for price drops, red for rises. "
+            f"Page 1: title \"{first}\". "
+            + " ".join(f"Page {i + 1}: use my uploaded image {r['chart_image']} large in the middle, text "
+                       f"\"{(r['rank'] + ' ') if r['rank'] else ''}{r['card']} {r['version']}\" at the top and "
+                       f"\"{r['was']} → {r['now']} ({r['change']})\" underneath."
+                       for i, r in enumerate(rows, 1))
+            + f" Last page: \"Charts for every card\", \"{SITE}\", \"Asking prices, not sales. "
+            "Not financial advice.\" Use these exact prices and names; do not create card artwork or change any numbers."),
+        "",
+        "Canva AI can rewrite numbers: compare every page with the table below before downloading.",
+        "",
+        "## Voiceover (all pages)",
+        f"- Intro: \"{'Here are this week' + chr(39) + 's biggest UK card price moves.' if not single else rows[0]['card'] + ': a big UK price move this week.'}\"",
+        *[f"- {r['rank'] or 'Item'} {r['card']}: \"{r['voiceover']}\"" for r in rows],
+        "- End: \"Charts for every card at the link in the description. Asking prices, not sales. "
+        "Not financial advice.\"",
+        "",
+        "## Data (check against this)",
+        "| | Card | Version | Was | Now | Change | Market |",
+        "|---|---|---|---|---|---|---|",
+        *[f"| {r['rank']} | {r['card']} | {r['version']} | {r['was']} | {r['now']} | {r['change']} | {r['market'] or '-'} |"
+          for r in rows],
+        "",
+        "## Upload text", "", description,
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def write_canva(stories, now, single, title, description):
+    rows = canva_rows(stories, now, single)
+    data = OUT / "canva-bulk.csv"
+    with data.open("w", newline="", encoding="utf-8-sig") as f:     # BOM so Canva/Excel read £ and arrows
+        writer = csv.DictWriter(f, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+    guide = OUT / "canva-guide.md"
+    guide.write_text(canva_guide(stories, now, single, title, description, rows), encoding="utf-8")
+    return data, guide
+
+
 # ---------------- Telegram ----------------
 def send_file(path, caption="", method="sendDocument", field="document", mime="application/octet-stream"):
     """Upload one file to the Telegram chat (sendVideo / sendDocument)."""
@@ -520,12 +628,15 @@ def main():
     (OUT / "upload.txt").write_text(description + "\n", encoding="utf-8")
     brief = OUT / "ai-video-brief.md"
     brief.write_text(ai_brief(stories, now, single, title, description), encoding="utf-8")
+    canva_data, canva_md = write_canva(stories, now, single, title, description)
     w.log(f"video: {path} ({seconds:.0f}s, {path.stat().st_size / 1e6:.1f} MB)")
     if not args.no_send:
         send_file(path, f"🎬 Check, then upload to YouTube Shorts:\n\n{title}", "sendVideo", "video", "video/mp4")
         w.send_telegram("Description to paste:\n\n" + description)
         send_file(brief, "🤖 Brief for another AI video tool (HeyGen, Synthesia, Veo, Sora...): paste it in "
                          "and attach the chart pictures below.", mime="text/markdown")
+        send_file(canva_md, "🎨 Canva: step-by-step guide + Canva AI prompt", mime="text/markdown")
+        send_file(canva_data, "🎨 Canva Bulk Create data (Apps -> Bulk create -> upload this CSV)", mime="text/csv")
         for i in range(1, len(stories) + 1):
             send_file(OUT / f"chart_{i}.png", f"chart_{i}.png", mime="image/png")
 
