@@ -19,23 +19,20 @@ TCGplayer's product images (publisher artwork; One Piece ones carry a "SAMPLE" w
 `USE_IMAGES = False` to leave them out. Uploading is manual because YouTube keeps videos uploaded through an
 unaudited API project private.
 
-## Google Drive (optional): files appear in Drive, Canva opens them from there
+## Dropbox (optional): files appear in Dropbox, Canva opens them from there
 
-Each run then uploads the video, charts, Canva CSV and guides to `My Drive / eBay watcher videos / <date>`
-and the Telegram message links to the folder. In Canva: Apps -> Google Drive -> pick the files
-(Bulk create: upload the CSV from the Google Drive tab). One-time setup (about 10 minutes):
+Each run then uploads the video, charts, Canva CSV and guides to `Dropbox / Apps / <your app> / <date>`
+and the Telegram message says where. In Canva: Apps -> Dropbox -> pick the files. One-time setup (5 minutes):
 
-1. https://console.cloud.google.com -> create a project (e.g. "ebay-watcher").
-2. APIs & Services -> Library -> **Google Drive API** -> Enable.
-3. APIs & Services -> OAuth consent screen (Google Auth Platform): External, app name "ebay-watcher",
-   your email as support and developer contact. Add yourself under Test users / Audience.
-   Then **Publish app** (status "In production") - in "Testing" Google expires the sign-in after 7 days.
-   No verification is needed: the only scope is drive.file (files the app creates).
-4. APIs & Services -> Credentials -> Create credentials -> OAuth client ID -> **Desktop app**.
-   Copy the client ID and client secret.
-5. On your Mac: `python3 video/google_drive_login.py`, paste the ID and secret, sign in, allow access
-   (Google warns the app is unverified: Advanced -> Go to ebay-watcher).
-6. GitHub repo -> Settings -> Secrets and variables -> Actions -> add `GDRIVE_CLIENT_ID`,
-   `GDRIVE_CLIENT_SECRET`, `GDRIVE_REFRESH_TOKEN` with the printed values.
+1. https://www.dropbox.com/developers/apps -> **Create app** -> Scoped access -> **App folder** ->
+   a name (must be unique on Dropbox, e.g. `ebay-watcher-videos-nick`).
+2. **Permissions** tab: tick `files.content.write` -> **Submit** (do this before step 4).
+3. **Settings** tab: copy the **App key**. (No need to publish: "Development" status is fine for your own account.)
+4. On your Mac, in this folder: `python3 video/dropbox_login.py`, paste the app key, allow access in the
+   browser, paste the code Dropbox shows back into the terminal.
+5. GitHub repo -> Settings -> Secrets and variables -> Actions -> add `DROPBOX_APP_KEY` and
+   `DROPBOX_REFRESH_TOKEN` with the printed values.
 
-Without these secrets the video run works as before (Telegram only). A Drive error never stops the run.
+The app can only see its own folder (Apps / <app name>), nothing else in your Dropbox. Remove its access any
+time at https://www.dropbox.com/account/connected_apps. Without these secrets the video run works as before
+(Telegram only); a Dropbox error never stops the run.
