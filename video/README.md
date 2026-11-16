@@ -18,3 +18,24 @@ Notes: prices are eBay UK *asking* prices, not sales - the video and description
 TCGplayer's product images (publisher artwork; One Piece ones carry a "SAMPLE" watermark) - set
 `USE_IMAGES = False` to leave them out. Uploading is manual because YouTube keeps videos uploaded through an
 unaudited API project private.
+
+## Google Drive (optional): files appear in Drive, Canva opens them from there
+
+Each run then uploads the video, charts, Canva CSV and guides to `My Drive / eBay watcher videos / <date>`
+and the Telegram message links to the folder. In Canva: Apps -> Google Drive -> pick the files
+(Bulk create: upload the CSV from the Google Drive tab). One-time setup (about 10 minutes):
+
+1. https://console.cloud.google.com -> create a project (e.g. "ebay-watcher").
+2. APIs & Services -> Library -> **Google Drive API** -> Enable.
+3. APIs & Services -> OAuth consent screen (Google Auth Platform): External, app name "ebay-watcher",
+   your email as support and developer contact. Add yourself under Test users / Audience.
+   Then **Publish app** (status "In production") - in "Testing" Google expires the sign-in after 7 days.
+   No verification is needed: the only scope is drive.file (files the app creates).
+4. APIs & Services -> Credentials -> Create credentials -> OAuth client ID -> **Desktop app**.
+   Copy the client ID and client secret.
+5. On your Mac: `python3 video/google_drive_login.py`, paste the ID and secret, sign in, allow access
+   (Google warns the app is unverified: Advanced -> Go to ebay-watcher).
+6. GitHub repo -> Settings -> Secrets and variables -> Actions -> add `GDRIVE_CLIENT_ID`,
+   `GDRIVE_CLIENT_SECRET`, `GDRIVE_REFRESH_TOKEN` with the printed values.
+
+Without these secrets the video run works as before (Telegram only). A Drive error never stops the run.

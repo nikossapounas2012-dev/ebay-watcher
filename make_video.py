@@ -16,12 +16,15 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 from datetime import datetime, timedelta, timezone
 import io
 import json
 from pathlib import Path
 import subprocess
 import textwrap
+import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 
@@ -47,6 +50,9 @@ MARKET_BAND = (0.5, 2.0)    # both prices must be within 0.5x-2x of the market p
 CHART_DAYS = 14             # chart window
 USE_IMAGES = True           # TCGplayer product pictures (publisher artwork - see README notes)
 SITE = "nikossapounas2012-dev.github.io/ebay-watcher"
+# Google Drive: each run's files go to "<GDRIVE_FOLDER>/<date>" when GDRIVE_CLIENT_ID, GDRIVE_CLIENT_SECRET and
+# GDRIVE_REFRESH_TOKEN are set (see video/README.md). Canva opens them through its Google Drive app.
+GDRIVE_FOLDER = "eBay watcher videos"
 MUSIC = w.BASE_DIR / "video" / "music.mp3"
 OUT = w.BASE_DIR / "out"
 
@@ -558,6 +564,78 @@ def write_canva(stories, now, single, title, description):
     return data, guide
 
 
+# ---------------- Google Drive ----------------
+DRIVE = "https://www.googleapis.com/drive/v3/files"
+DRIVE_UPLOAD = "https://www.googleapis.com/upload/drive/v3/files"
+FOLDER = "application/vnd.google-apps.folder"
+
+
+def drive_token():
+    """A fresh access token from the saved refresh token, or None when Drive isn't set up."""
+    ids = [os.getenv(k, "") for k in ("GDRIVE_CLIENT_ID", "GDRIVE_CLIENT_SECRET", "GDRIVE_REFRESH_TOKEN")]
+    if not all(ids):
+        return None
+    data = urllib.parse.urlencode({"client_id": ids[0], "client_secret": ids[1], "refresh_token": ids[2],
+                                   "grant_type": "refresh_token"}).encode()
+    with urllib.request.urlopen("https://oauth2.googleapis.com/token", data, timeout=30) as r:
+        return json.load(r)["access_token"]
+
+
+def drive_call(token, url, method="GET", body=None, content_type="application/json"):
+    req = urllib.request.Request(url, data=body, method=method,
+                                 headers={"Authorization": f"Bearer {token}", "Content-Type": content_type})
+    with urllib.request.urlopen(req, timeout=120) as r:
+        return json.load(r)
+
+
+def drive_find(token, name, parent=None, folder=False):
+    q = [f"name = '{name.replace(chr(39), chr(92) + chr(39))}'", "trashed = false"]
+    if parent:
+        q.append(f"'{parent}' in parents")
+    if folder:
+        q.append(f"mimeType = '{FOLDER}'")
+    found = drive_call(token, f"{DRIVE}?" + urllib.parse.urlencode({"q": " and ".join(q),
+                                                                     "fields": "files(id,name)"}))["files"]
+    return found[0]["id"] if found else None
+
+
+def drive_folder(token, name, parent=None):
+    return drive_find(token, name, parent, folder=True) or drive_call(
+        token, DRIVE, "POST", json.dumps({"name": name, "mimeType": FOLDER, **({"parents": [parent]} if parent else {})}
+                                         ).encode())["id"]
+
+
+def drive_put(token, path, parent):
+    """Upload a file into the folder; a re-run replaces the file of the same name instead of adding a copy."""
+    boundary = uuid.uuid4().hex
+    existing = drive_find(token, path.name, parent)
+    meta = {} if existing else {"name": path.name, "parents": [parent]}
+    mime = {".mp4": "video/mp4", ".png": "image/png", ".csv": "text/csv", ".md": "text/markdown",
+            ".txt": "text/plain"}.get(path.suffix, "application/octet-stream")
+    body = (f"--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{json.dumps(meta)}\r\n"
+            f"--{boundary}\r\nContent-Type: {mime}\r\n\r\n").encode() + path.read_bytes() + f"\r\n--{boundary}--".encode()
+    url = f"{DRIVE_UPLOAD}/{existing}?uploadType=multipart" if existing else f"{DRIVE_UPLOAD}?uploadType=multipart"
+    drive_call(token, url, "PATCH" if existing else "POST", body, f"multipart/related; boundary={boundary}")
+
+
+def upload_to_drive(paths, name):
+    """Upload the run's files to "<GDRIVE_FOLDER>/<name>"; returns the folder link, or None."""
+    try:
+        token = drive_token()
+        if not token:
+            return None
+        folder = drive_folder(token, name, drive_folder(token, GDRIVE_FOLDER))
+        for path in paths:
+            drive_put(token, path, folder)
+        w.log(f"video: {len(paths)} files uploaded to Google Drive / {GDRIVE_FOLDER} / {name}")
+        return f"https://drive.google.com/drive/folders/{folder}"
+    except urllib.error.HTTPError as e:
+        w.log(f"video: Google Drive upload failed: {e.code} {e.read().decode(errors='ignore')[:300]}")
+    except Exception as e:
+        w.log(f"video: Google Drive upload failed: {e}")
+    return None
+
+
 # ---------------- Telegram ----------------
 def send_file(path, caption="", method="sendDocument", field="document", mime="application/octet-stream"):
     """Upload one file to the Telegram chat (sendVideo / sendDocument)."""
@@ -629,9 +707,14 @@ def main():
     brief = OUT / "ai-video-brief.md"
     brief.write_text(ai_brief(stories, now, single, title, description), encoding="utf-8")
     canva_data, canva_md = write_canva(stories, now, single, title, description)
+    charts = [OUT / f"chart_{i}.png" for i in range(1, len(stories) + 1)]
+    drive = upload_to_drive([path, OUT / "upload.txt", brief, canva_md, canva_data, *charts],
+                            f"{now:%Y-%m-%d}" + (f" {args.item.upper()}" if single else ""))
     w.log(f"video: {path} ({seconds:.0f}s, {path.stat().st_size / 1e6:.1f} MB)")
     if not args.no_send:
-        send_file(path, f"🎬 Check, then upload to YouTube Shorts:\n\n{title}", "sendVideo", "video", "video/mp4")
+        send_file(path, f"🎬 Check, then upload to YouTube Shorts:\n\n{title}"
+                  + (f"\n\n📁 All files (Canva, charts, brief) in Google Drive:\n{drive}" if drive else ""),
+                  "sendVideo", "video", "video/mp4")
         w.send_telegram("Description to paste:\n\n" + description)
         send_file(brief, "🤖 Brief for another AI video tool (HeyGen, Synthesia, Veo, Sora...): paste it in "
                          "and attach the chart pictures below.", mime="text/markdown")
