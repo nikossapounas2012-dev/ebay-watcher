@@ -5,6 +5,7 @@ TikTok or Reels, and sends it to Telegram with a ready-made title and descriptio
 
 - **Weekly**: the GitHub workflow "Price video" runs on Sundays (or press "Run workflow").
 - **One item**: "Run workflow" with an item number, e.g. `P165`, or locally `python make_video.py --item P165`.
+- **Brief for another AI**: `out/ai-video-brief.md` (also sent to Telegram with the chart pictures) - paste it into HeyGen, Synthesia, Veo, Sora, Runway or ChatGPT and attach the charts; it has the voiceover, scenes, exact data and rules (no invented numbers or card art).
 - **Music**: put a track here as `video/music.mp3` (e.g. from the YouTube Audio Library, which is free to use
   in YouTube videos) and commit it - it is added automatically and faded out. Without it the video is silent.
 

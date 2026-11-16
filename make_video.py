@@ -254,7 +254,7 @@ def legend(fig, y, s, refs):
         fig.text(x, y, "━ " + label, fontsize=22, color=color, ha="center", va="center")
 
 
-def item_scene(s, rank, total, history, refs, matches, now, single):
+def item_scene(s, rank, total, history, refs, matches, now, single, still=None):
     """Frames for one item: the chart draws itself, then the numbers appear and hold."""
     e = s["entry"]
     picture = image_for(e, matches)
@@ -296,6 +296,9 @@ def item_scene(s, rank, total, history, refs, matches, now, single):
         plt.close(fig)
         frames.append(frame)
     frames += [frames[-1]] * hold
+    if still:
+        still.parent.mkdir(parents=True, exist_ok=True)
+        plt.imsave(still, np.frombuffer(frames[-1], dtype=np.uint8).reshape(H, W, 3))
     return frames
 
 
@@ -354,25 +357,122 @@ def upload_text(stories, now, single):
     return title[:100], "\n".join(lines)
 
 
+# ---------------- brief for another AI (HeyGen, Synthesia, Veo, Sora, Runway, ChatGPT...) ----------------
+def say_money(v):
+    """£50.20 -> 'fifty pounds twenty' is overkill; voices read '£50.20' well, just drop .00."""
+    return f"£{v:,.0f}" if v == int(v) else f"£{v:,.2f}"
+
+
+def short_meta(e):
+    return e["label"][len(e["name"]):].strip(" ·()") if e["label"].startswith(e["name"]) else ""
+
+
+def ai_brief(stories, now, single, title, description):
+    n = len(stories)
+    lines = [
+        f"# Video brief: \"{title}\"",
+        "",
+        "Make a vertical short video (YouTube Shorts / TikTok / Reels) from the data below.",
+        "",
+        "## Format",
+        "- 9:16 vertical, 1080x1920, 25-35 seconds, on-screen captions for every spoken line.",
+        "- Calm, clear, collector-to-collector tone. British English, prices in pounds.",
+        "- Dark background (#111317), white text, accent orange (#f29a45), drops green (#4cc584), "
+        "rises red (#f07070).",
+        "",
+        "## Hard rules (do not break these)",
+        "1. Use every number, name, card code and date EXACTLY as written in the Data section. "
+        "Do not round, convert, estimate or invent anything.",
+        "2. Prices are the cheapest UK eBay Buy It Now ASKING price, postage included - not sold prices. "
+        "Never say \"sold for\", \"worth\" or \"value\". Say \"cheapest UK listing\" or \"listed at\".",
+        "3. Do NOT generate, redraw or imitate card artwork, logos, set symbols or packaging. Card visuals "
+        "and charts come only from the attached images (chart_1.png ...). They contain the real data - "
+        "show them full-screen or as large as possible, do not alter the numbers on them.",
+        "4. AI-generated footage is allowed only for abstract filler: e.g. a blurred table with card sleeves, "
+        "hands shuffling blank-backed cards, a soft background. Nothing that looks like a real product.",
+        "5. No buying or investment advice. The video ends with: \"Asking prices, not sales. "
+        "Not financial advice.\"",
+        "",
+        "## Voiceover script",
+    ]
+    t = 0.0
+    hook = (f"{stories[0]['entry']['name']}: a big UK price move this week." if single
+            else "Here are this week's biggest UK card price moves.")
+    lines.append(f"[{t:.0f}-{t + 2.5:.0f}s] \"{hook}\"")
+    t += 2.5
+    for i, s in enumerate(stories, 1):
+        e = s["entry"]
+        meta = short_meta(e)
+        direction = "down" if s["change"] < 0 else "up"
+        since = "this week" if s["since"] <= now - timedelta(days=DAYS) + timedelta(hours=1) \
+            else f"since {s['since']:%-d %B}"
+        word = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][i - 1]
+        spoken = (f"{'' if single else f'Number {word}: '}{e['name']}"
+                  f"{', ' + meta if meta else ''}. Cheapest UK listing went from {say_money(s['before'])} "
+                  f"to {say_money(s['now'])}, {direction} {abs(s['change']):.0%} {since}.")
+        if s["market"]:
+            spoken += f" {s['market'][1]} has it at {say_money(s['market'][0])}."
+        lines.append(f"[{t:.0f}-{t + 5.5:.0f}s] \"{spoken}\"")
+        t += 5.5
+    lines.append(f"[{t:.0f}-{t + 3:.0f}s] \"Charts for every card at the link in the description. "
+                 f"Asking prices, not sales. Not financial advice.\"")
+    t += 3
+    lines += ["", "## Scenes", "| Time | Visual | On-screen text |", "|---|---|---|",
+              f"| 0-2.5s | Title card (abstract filler footage allowed behind it) | "
+              f"{'UK card prices - ' + now.strftime('%-d %b') if not single else stories[0]['entry']['name']} |"]
+    start = 2.5
+    for i, s in enumerate(stories, 1):
+        arrow = "▼" if s["change"] < 0 else "▲"
+        lines.append(f"| {start:.1f}-{start + 5.5:.1f}s | chart_{i}.png full-screen (slow zoom is fine) | "
+                     f"{'' if single else f'#{i} '}{s['entry']['name']} · {gbp(s['before'])} → {gbp(s['now'])} "
+                     f"{arrow}{abs(s['change']):.0%} |")
+        start += 5.5
+    lines += [f"| {start:.1f}-{start + 3:.1f}s | End card | {SITE} · Asking prices, not sales. "
+              "Not financial advice. |", "",
+              "## Data (the only source of truth)",
+              "| # | Game | Card / item | Version | Price a week ago | Cheapest now | Change | Market price | "
+              "Lowest seen |", "|---|---|---|---|---|---|---|---|---|"]
+    for i, s in enumerate(stories, 1):
+        e = s["entry"]
+        m = f"{s['market'][1]} {gbp(s['market'][0])}" if s["market"] else "none"
+        lines.append(f"| {i} | {GAME.get(e['kind'], e.get('game', ''))} | {e['name']} | {short_meta(e) or '-'} | "
+                     f"{gbp(s['before'])} | {gbp(s['now'])} | {s['change']:+.0%} | {m} | {gbp(s['lowest'])} |")
+    lines += ["",
+              f"Data date: {now:%-d %B %Y}. eBay prices: cheapest UK Buy It Now listing incl. postage, checked every "
+              "2 hours. Market price: Cardmarket trend, else TCGplayer market price, converted to pounds.",
+              "",
+              "## Attached files",
+              *[f"- chart_{i}.png - {s['entry']['label']}: card picture and its 14-day price chart (eBay line, "
+                f"Cardmarket/TCGplayer dashed)" for i, s in enumerate(stories, 1)],
+              "- price-video.mp4 - the plain version of this video, as a reference for timing and content",
+              "",
+              "## Title, description and hashtags for the upload", "", description]
+    return "\n".join(lines) + "\n"
+
+
 # ---------------- Telegram ----------------
-def send_video(path, caption):
+def send_file(path, caption="", method="sendDocument", field="document", mime="application/octet-stream"):
+    """Upload one file to the Telegram chat (sendVideo / sendDocument)."""
     token, chat = w.telegram_config()
     if not (token and chat):
-        w.log("video: Telegram not configured - not sent")
+        w.log(f"video: Telegram not configured - {path.name} not sent")
         return
     boundary = uuid.uuid4().hex
     body = io.BytesIO()
-    for name, value in (("chat_id", chat), ("caption", caption[:1024]), ("supports_streaming", "true")):
+    fields = [("chat_id", chat), ("caption", caption[:1024])]
+    if method == "sendVideo":
+        fields.append(("supports_streaming", "true"))
+    for name, value in fields:
         body.write(f"--{boundary}\r\nContent-Disposition: form-data; name=\"{name}\"\r\n\r\n{value}\r\n".encode())
-    body.write(f"--{boundary}\r\nContent-Disposition: form-data; name=\"video\"; filename=\"{path.name}\"\r\n"
-               f"Content-Type: video/mp4\r\n\r\n".encode())
+    body.write(f"--{boundary}\r\nContent-Disposition: form-data; name=\"{field}\"; filename=\"{path.name}\"\r\n"
+               f"Content-Type: {mime}\r\n\r\n".encode())
     body.write(path.read_bytes())
     body.write(f"\r\n--{boundary}--\r\n".encode())
-    req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendVideo", data=body.getvalue(),
+    req = urllib.request.Request(f"https://api.telegram.org/bot{token}/{method}", data=body.getvalue(),
                                  headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
     with urllib.request.urlopen(req, timeout=120) as r:
         json.load(r)
-    w.log("video: sent to Telegram")
+    w.log(f"video: {path.name} sent to Telegram")
 
 
 # ---------------- main ----------------
@@ -408,7 +508,8 @@ def main():
                               ("on eBay UK", 40, MUTED, "normal")], 2.2)
     for i, s in enumerate(stories, 1):
         w.log(f"video: {s['entry']['num']} {s['entry']['label']} {s['before']} -> {s['now']} ({s['change']:+.0%})")
-        frames += item_scene(s, i, len(stories), history, refs, matches, now, single)
+        frames += item_scene(s, i, len(stories), history, refs, matches, now, single,
+                             still=OUT / f"chart_{i}.png")
     frames += card_scene([("Charts for every card", 50, TEXT, "bold"), (SITE, 30, EBAY, "normal"),
                           ("Cheapest UK eBay Buy It Now,\npostage included.", 32, MUTED, "normal"),
                           ("Asking prices, not sales. Not financial advice.", 28, MUTED, "normal")], 2.5)
@@ -417,10 +518,16 @@ def main():
     seconds = write_video(frames, path)
     title, description = upload_text(stories, now, single)
     (OUT / "upload.txt").write_text(description + "\n", encoding="utf-8")
+    brief = OUT / "ai-video-brief.md"
+    brief.write_text(ai_brief(stories, now, single, title, description), encoding="utf-8")
     w.log(f"video: {path} ({seconds:.0f}s, {path.stat().st_size / 1e6:.1f} MB)")
     if not args.no_send:
-        send_video(path, f"🎬 Check, then upload to YouTube Shorts:\n\n{title}")
+        send_file(path, f"🎬 Check, then upload to YouTube Shorts:\n\n{title}", "sendVideo", "video", "video/mp4")
         w.send_telegram("Description to paste:\n\n" + description)
+        send_file(brief, "🤖 Brief for another AI video tool (HeyGen, Synthesia, Veo, Sora...): paste it in "
+                         "and attach the chart pictures below.", mime="text/markdown")
+        for i in range(1, len(stories) + 1):
+            send_file(OUT / f"chart_{i}.png", f"chart_{i}.png", mime="image/png")
 
 
 if __name__ == "__main__":
