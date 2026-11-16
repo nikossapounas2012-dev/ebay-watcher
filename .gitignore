@@ -7,3 +7,6 @@ card_names.json
 reference_history.csv
 reference_state.json
 reference_matches.json
+
+# made by make_video.py
+out/
