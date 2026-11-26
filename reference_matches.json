@@ -35,7 +35,7 @@
    "note": "6 versions on Cardmarket - add the right link to cardmarket_ids.txt"
   },
   "tcgplayer": {
-   "product": 476791,
+   "product": 22226,
    "note": ""
   }
  },
@@ -7022,7 +7022,7 @@
  "Sorcery | Death Dealer | Alpha | Foil | alpha/frazetta -beta | 77/23335/521665 | 25/910843": {
   "tcgplayer": {
    "product": 521665,
-   "note": "no TCGplayer price"
+   "note": ""
   },
   "cardmarket": {
    "product": 910843,
